@@ -1,0 +1,5 @@
+rockets/
+__pycache__/
+dist
+rockethub.egg-info
+build
