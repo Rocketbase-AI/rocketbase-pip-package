@@ -4,7 +4,7 @@ import importlib
 import types
 import requests
 from tqdm import tqdm
-from rockethub.discovery_api import DiscoveryAPI
+from rockethub.api import RocketAPI
 from datetime import datetime
 
 def unpack_archive(path: str):
@@ -38,13 +38,13 @@ class Rocket:
         """
         
         # Check if the rocket exists and get the last version if not precised
-        rocket_author, rocket_name, rocket_version = DiscoveryAPI().get_rocket_info(rocket)
+        rocket_author, rocket_name, rocket_version = RocketAPI().get_rocket_info(rocket)
 
         # Check if folder to download the rockets exists
         ensure_dir(folder_path)
         
         # Check if the rocket has already been downloaded
-        rocket_folder = DiscoveryAPI().get_rocket_folder(rocket_author, rocket_name, rocket_version)
+        rocket_folder = RocketAPI().get_rocket_folder(rocket_author, rocket_name, rocket_version)
 
         if rocket_folder in os.listdir(folder_path): 
             model_name = rocket_folder
@@ -52,7 +52,7 @@ class Rocket:
         
         else:
             # Get the rocket's url
-            url = DiscoveryAPI().get_rocket_url(rocket_author, rocket_name, rocket_version)
+            url = RocketAPI().get_rocket_url(rocket_author, rocket_name, rocket_version)
             path_to_landing_rocket = os.path.join(folder_path, 'landing_rocket.tar')
 
             #Download URL

@@ -1,37 +1,9 @@
 import itertools
 
-class DiscoveryAPI:
+class RocketAPI:
     def __init__(self):
-        self.hangar = {
-            'igor':{
-                'esrgan':{
-                    'folder_name': 'ESRGAN',
-                    'v1a': 'https://storage.googleapis.com/rockets-hangar/esrgan_v1a.tar'
-                },
-                'cycle_gan_summer2winter_yosemite':{
-                    'folder_name': 'CYCLE_GAN_SUMMER2WINTER_YOSEMITE',
-                    'v1a': 'https://storage.googleapis.com/rockets-hangar/cycle_gan_summer2winter_yosemite_v1a.tar'
-                },
-                'retinanet':{
-                    'folder_name': 'RETINANET',
-                    'v1a': 'https://storage.googleapis.com/rockets-hangar/retinanet_v1a.tar'
-                }
-            },
-            'lucas':{
-                'yolov3':{
-                    'folder_name': 'YOLOv3',
-                    'v1a': 'https://storage.googleapis.com/rockets-hangar/yolov3_v1a.tar',
-                    'v1b': 'https://storage.googleapis.com/rockets-hangar/yolov3_v1b.tar',
-                    'v1c': 'https://storage.googleapis.com/rockets-hangar/yolov3_v1c.tar',
-                },
-                'ssd':{
-                    'folder_name': 'SSD',
-                    'v1a': 'https://storage.googleapis.com/rockets-hangar/ssd_v1a.tar',
-                    'v1b': 'https://storage.googleapis.com/rockets-hangar/ssd_v1b.tar',
-                    'v1c': 'https://storage.googleapis.com/rockets-hangar/ssd_v1c.tar',
-                }
-            }
-        }
+        self.models = []
+        self.models_api_url = "https://europe-west1-rockethub.cloudfunctions.net/getAvailableModels"
 
     def get_rocket_info(self, rocket: str):
         """ Parse the Rocket identifier.
@@ -51,7 +23,16 @@ class DiscoveryAPI:
         rocket_author  = rocket_parsed[0]
         rocket_name    = rocket_parsed[1]
 
-        print('Looking for the Rocket ' + rocket_name + ' made by ' + rocket_author + '...')            
+        print('Looking for the Rocket ' + rocket_name + ' made by ' + rocket_author + '...')
+        payload = {'author': rocket_author, 'model': rocket_name}
+        if len(rocket_parsed) > 2:
+            rocket_version = rocket_parsed[2]
+            payload['version'] = rocket_version
+        res = requests.get(self.models_api_url, params=payload)
+        
+        # if status != 200 then database is broken
+        assert res.status_code == 200, 'Database error. Please try again later.'
+        self.models = res.json()
 
         # Test that the rocket exists
         assert rocket_author in self.hangar.keys(), rocket_author + ' can\'t be found as an author.'
