@@ -36,27 +36,27 @@ class Rocket:
             folder_path (str): folder where to check if the Rocket is here already or where to download it
             chunk_size (int): size of the chunk when downloading the Rocket
         """
-        
+        api = RocketAPI()
         # Check if the rocket exists and get the last version if not precised
-        rocket_author, rocket_name, rocket_version = RocketAPI().get_rocket_info(rocket)
+        rocket_author, rocket_name, rocket_version = api.get_rocket_info(rocket)
 
         # Check if folder to download the rockets exists
         ensure_dir(folder_path)
         
         # Check if the rocket has already been downloaded
-        rocket_folder = RocketAPI().get_rocket_folder(rocket_author, rocket_name, rocket_version)
+        rocket_folder = api.get_rocket_folder(rocket_author, rocket_name, rocket_version)
 
         if rocket_folder in os.listdir(folder_path): 
             model_name = rocket_folder
-            print('Rocket is already here.')
+            print('Rocket has already landed.')
         
         else:
             # Get the rocket's url
-            url = RocketAPI().get_rocket_url(rocket_author, rocket_name, rocket_version)
+            url = api.get_rocket_url(rocket_author, rocket_name, rocket_version)
             path_to_landing_rocket = os.path.join(folder_path, 'landing_rocket.tar')
 
             #Download URL
-            print('Rocket in approach...')
+            print('Rocket approaching...')
             h = requests.head(url, allow_redirects=True)
             headers = h.headers
             content_type = headers.get('content-type')
@@ -77,12 +77,12 @@ class Rocket:
             model_name = unpack_archive(path_to_landing_rocket)
             print('It is a sucess! The Rocket has landed!')
 
-        print("Let's build the Rocket...")
+        print("Let's prepare the Rocket...")
         #Build the model
         module = importlib.import_module('rockets.{}.rocket_builder'.format(model_name))
         build_func = getattr(module, 'build')
         model = build_func()
-        print("The Rocket is ready for use!")
+        print("We have liftoff!")
         return model
 
 

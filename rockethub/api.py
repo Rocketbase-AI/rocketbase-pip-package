@@ -1,8 +1,10 @@
 import itertools
+import requests
 
 class RocketAPI:
     def __init__(self):
         self.models = []
+        self.selected_model = {}
         self.models_api_url = "https://europe-west1-rockethub.cloudfunctions.net/getAvailableModels"
 
     def get_rocket_info(self, rocket: str):
@@ -25,6 +27,7 @@ class RocketAPI:
 
         print('Looking for the Rocket ' + rocket_name + ' made by ' + rocket_author + '...')
         payload = {'author': rocket_author, 'model': rocket_name}
+        rocket_version = ''
         if len(rocket_parsed) > 2:
             rocket_version = rocket_parsed[2]
             payload['version'] = rocket_version
@@ -35,17 +38,15 @@ class RocketAPI:
         self.models = res.json()
 
         # Test that the rocket exists
-        assert rocket_author in self.hangar.keys(), rocket_author + ' can\'t be found as an author.'
-        assert rocket_name in self.hangar[rocket_author].keys(), rocket_name + ' can\'t be found as a rocket from ' + rocket_author
+        assert len(self.models) > 0, rocket + 'rocket cannot be found from our database. Please check the spelling.'
+        print('{models_len} model versions found from the database.'.format(models_len=len(self.models)))
         
-        if len(rocket_parsed) <= 2:
-            rocket_version = self.get_rocket_last_version(rocket_author, rocket_name)
-            print('You didn\'t say which version you wanted so we selected for you the newest one: ' + rocket_version)
-
+        # TODO: Select using some better logic
+        self.selected_model = self.models[0]
+        if rocket_version:
+            print('Version ' + rocket_version + 'selected.')
         else:
-            rocket_version = rocket_parsed[2]
-            assert rocket_version in self.hangar[rocket_author][rocket_name].keys(), rocket_version + ' can\'t be found as a version for the rocket ' + rocket_name + ' from author ' + rocket_author
-            print('Version ' + rocket_version + ' exists and is waiting for you.')
+            print('You didn\'t specify the version so the newest one is used.')
 
         return rocket_author, rocket_name, rocket_version
 
@@ -57,7 +58,7 @@ class RocketAPI:
             rocket_name (str): Name of the rocket 
             rocket_version (str): Version of the Rocket
         """
-        return self.hangar[rocket_author][rocket_name][rocket_version]
+        return self.selected_model['modelFilePath']
     
     def get_rocket_folder(self, rocket_author: str, rocket_name: str, rocket_version: str):
         """ Get the name of the folder where the Rocket is unpacked.
@@ -67,7 +68,7 @@ class RocketAPI:
             rocket_name (str): Name of the rocket 
             rocket_version (str): Version of the Rocket
         """
-        return self.hangar[rocket_author][rocket_name]['folder_name']
+        return self.selected_model['folderName']
     
     def get_rocket_last_version(self, rocket_author: str, rocket_name: str):
         """Get the last version of a Rocket.

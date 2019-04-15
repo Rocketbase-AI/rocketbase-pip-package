@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name='rockethub',
     packages=setuptools.find_packages(),
-    version='0.1.1',
+    version='0.2.0',
     license='Proprietary',
     description='Accelerating Machine Learning Research',
     long_description=long_description,
