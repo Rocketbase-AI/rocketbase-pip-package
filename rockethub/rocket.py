@@ -12,6 +12,7 @@ def unpack_archive(path: str):
     t = tarfile.open(path, 'r')
     model_name = os.path.commonprefix(t.getnames())
     t.extractall('rockets')
+    t.close()
     os.remove(path)
 
     return model_name
