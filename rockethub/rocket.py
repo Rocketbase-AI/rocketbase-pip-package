@@ -17,6 +17,13 @@ def unpack_archive(path: str):
 
     return model_name
 
+def pack_archive(path: str, rocketName: str):
+    with tarfile.open(os.path.join(path, rocketName + '_launch.tar'), "w") as tar_handle:
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                tar_handle.add(os.path.join(root, file))
+
+    return os.path.join(path, rocketName + '_launch.tar')
 
 def ensure_dir(dir_name: str):
     """Creates folder if not exists.
@@ -86,5 +93,37 @@ class Rocket:
         print("We have liftoff!")
         return model
 
+    @staticmethod
+    def launch(rocket: str, isPrivate: bool, folder_path = "rockets"):
+        """ Upload the latest Rocket that is ready localy
 
+        Upload the latest version of the Rocket that is localy available
 
+        Args:
+            rocket (str): Rocket Identifier (author/name/(version))
+            folder_path (str): folder where to find the Rocket
+        """
+        # Init API for Rocket Upload
+        api = RocketAPI()
+
+        rocket_author, rocket_name, rocket_version = api.get_rocket_info(rocket)
+
+        print(f'{rocket_author} built {rocket_name} at generation {rocket_version}')
+
+        _name = rocket_author + '_' + rocket_name + '_' + rocket_version
+
+        # Pack folder into archive
+        print("Let's load everything into the Rocket...")
+        path_to_folder = folder_path + '/' +api.get_rocket_folder(rocket_author, rocket_name, rocket_version)
+        path_to_launch_rocket = pack_archive(folder_path, _name)
+        print("Rocket ready to launch!")
+
+        # Launch Rocket
+        launch_success = api.push_rocket(
+            rocket_author=rocket_author,
+            model=rocket_name,
+            version=rocket_version,
+            isPrivate=isPrivate,
+            tar_file=path_to_launch_rocket)
+
+        return launch_success
