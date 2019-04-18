@@ -164,7 +164,6 @@ class RocketAPI:
 
         blob = self.bucket.blob(destination_blob_name)
 
-        print(f'Rocket size: {os.path.getsize(source_file_name)//1024} KB. ')
         print("Please wait.")
 
         with open(source_file_name, 'rb') as f:
@@ -208,5 +207,5 @@ class RocketAPI:
         res = requests.post(self.push_url, json = payload, headers=headers)
 
         assert res.status_code == 201, "Push Rocket Update has failed!"
-
+        
         return res.status_code == 201
