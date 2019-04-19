@@ -18,7 +18,8 @@ setuptools.setup(
     install_requires=[
         'tqdm',
         'requests',
-        'fire'
+        'fire',
+        'google-cloud-storage'
     ],
     classifiers=[
         # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package

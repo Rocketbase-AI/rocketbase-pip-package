@@ -90,7 +90,6 @@ class Rocket:
         module = importlib.import_module('rockets.{}.rocket_builder'.format(model_name))
         build_func = getattr(module, 'build')
         model = build_func()
-        print("We have liftoff!")
         return model
 
     @staticmethod
@@ -107,9 +106,7 @@ class Rocket:
         api = RocketAPI()
 
         rocket_author, rocket_name, rocket_version = api.get_rocket_info(rocket)
-
-        print(f'{rocket_author} built {rocket_name} at generation {rocket_version}')
-
+        
         _name = rocket_author + '_' + rocket_name + '_' + rocket_version
 
         # Pack folder into archive
@@ -126,4 +123,5 @@ class Rocket:
             isPrivate=isPrivate,
             tar_file=path_to_launch_rocket)
 
+        print('Rocket reached its destination.')
         return launch_success
