@@ -26,6 +26,15 @@ def pack_archive(path: str, rocketName: str):
 
     return os.path.join(path, rocketName + '_launch.tar')
 
+def read_slug(rocket: str):
+    """Parse the Rocket URL
+    """
+    rocket_parsed = rocket.split('/')
+    assert len(rocket_parsed) > 1, "Please provide more information about the rocket"
+    rocket_author = rocket_parsed[0]
+    rocket_name   = rocket_parsed[1]
+    rocket_version= rocket_parsed[2] if len(rocket_parsed)>2 else ""
+
 def ensure_dir(dir_name: str):
     """Creates folder if not exists.
     """
