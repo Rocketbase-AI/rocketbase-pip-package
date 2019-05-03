@@ -6,3 +6,4 @@ build
 *.pyc
 *.ipynb
 .ipynb_checkpoints
+.vscode
