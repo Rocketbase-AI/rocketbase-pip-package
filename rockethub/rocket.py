@@ -34,16 +34,16 @@ def read_slug(rocket: str):
     """
     rocket_parsed = rocket.split('/')
     assert len(rocket_parsed) > 1, "Please provide more information about the rocket"
-    rocket_author = rocket_parsed[0].lower()
-    rocket_name   = rocket_parsed[1].lower()
+    rocket_username = rocket_parsed[0].lower()
+    rocket_modelName   = rocket_parsed[1].lower()
     rocket_hash= rocket_parsed[2] if len(rocket_parsed)>2 else ""
-    return rocket_author, rocket_name, rocket_hash
+    return rocket_username, rocket_modelName, rocket_hash
 
 def get_rocket_folder(rocket_slug: str):
     """Build Rocket folder name
     """
-    rocket_author, rocket_name, rocket_hash = read_slug(rocket_slug)
-    rocket_folder_name = rocket_author+'_'+rocket_name
+    rocket_username, rocket_modelName, rocket_hash = read_slug(rocket_slug)
+    rocket_folder_name = rocket_username+'_'+rocket_modelName
     if len(rocket_hash) > 7:
         rocket_folder_name = rocket_folder_name+'_'+rocket_hash[:8]
     print("Rocket folder is {}".format(rocket_folder_name))
@@ -151,7 +151,7 @@ class Rocket:
             folder_path (str): folder where to find the Rocket
         """
         # Get Rocket information
-        rocket_author, rocket_name, rocket_hash = read_slug(rocket)
+        rocket_username, rocket_modelName, rocket_hash = read_slug(rocket)
 
         # Get path to Rocket
         rocket_path = get_rocket_folder(rocket_slug=rocket)
@@ -160,8 +160,8 @@ class Rocket:
         with open(os.path.join(folder_path, rocket_path, 'info.json')) as metadata_file:
             metadata_dict = json.load(metadata_file)
             check_metadata(metadata_dict)
-            assert str(metadata_dict['builder']) == str(rocket_author), "The Rocket author name does not match the information in info.json. {} vs {}".format(rocket_author, metadata_dict['builder'])
-            assert str(metadata_dict['model']) == str(rocket_name), "The Rocket model name does not match the information in info.json. {} vs {}".format(rocket_name, metadata_dict['model'])
+            assert str(metadata_dict['builder']) == str(rocket_username), "The Rocket author name does not match the information in info.json. {} vs {}".format(rocket_username, metadata_dict['builder'])
+            assert str(metadata_dict['model']) == str(rocket_modelName), "The Rocket model name does not match the information in info.json. {} vs {}".format(rocket_modelName, metadata_dict['model'])
 
         print("Let's load everything into the Rocket...")
         
@@ -178,8 +178,8 @@ class Rocket:
         api = RocketAPI()
         # Launch Rocket
         launch_success = api.push_rocket(
-            rocket_author =rocket_author,
-            rocket_name =rocket_name,
+            rocket_username =rocket_username,
+            rocket_modelName =rocket_modelName,
             rocket_hash =new_rocket_hash,
             rocket_family = metadata_dict['family'],
             trainingDataset = metadata_dict['dataset'],

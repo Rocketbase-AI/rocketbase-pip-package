@@ -172,8 +172,8 @@ class RocketAPI:
         return blob.public_url
 
     def push_rocket(self, 
-                    rocket_author: str, 
-                    rocket_name: str, 
+                    rocket_username: str, 
+                    rocket_modelName: str, 
                     rocket_hash: str, 
                     rocket_family:str, 
                     trainingDataset: str,
@@ -186,21 +186,26 @@ class RocketAPI:
         """Push the latest version of a Rocket to the cloud
 
         Args:
-            rocket_author (str): Author of the new Rocket
-            model (str): Name of the Model contained in the Rocket
-            version (str): Version number of the Rocket
-            modelFilePath (str): Name of the path of the Rocket in Cloud Storage
-            isPrivate (bool): Flag accessibility for Rocket
-            tar_file (str): Path to the Rocket tar-file
+            rocket_username (str): Author of the new Rocket
+            rocket_modelName (str): Name of the Model contained in the Rocket
+            rocket_hash (str): Version hash of the Rocket
+            rocket_family (str): Rocket family this Rocket belongs to
+            trainingDataset (str): Dataset name this Rocket was trained on
+            isTrainable (str): Flag to indicate whether this Rocket has necessary components for training
+            rocketRepoUrl (str): URL of the repository of the Rocket code
+            paperUrl (str): URL of the original research publication
+            originRepoUrl (str): URL of the original repository of the model
+            description (str): Short description of the Rocket and its details
+            tar_file (str): Path to the TAR archive of the Rocket
         """
         # Push Rocket to Cloud Storage
         storage_file_path = self.push_rocket_to_storage(
                                                 source_file_name=tar_file,
-                                                destination_blob_name=(rocket_author+'_'+rocket_name+'_'+rocket_hash+'.tar')) 
+                                                destination_blob_name=(rocket_username+'_'+rocket_modelName+'_'+rocket_hash+'.tar')) 
 
         payload = ({
-            'modelName': rocket_name,
-            'username': rocket_author,
+            'modelName': rocket_modelName,
+            'username': rocket_username,
             'family': rocket_family,
             'trainingDataset': trainingDataset,
             'isTrainable': isTrainable,
