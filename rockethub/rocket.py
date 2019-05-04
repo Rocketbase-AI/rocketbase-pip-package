@@ -31,6 +31,7 @@ def unpack_archive(tar_path: str, rocket_folder_name: str, folder_path: str, rem
 
 def pack_rocket_to_tar(path: str, rocket_folder: str, blueprint: list):
     """Packs a Rocket into a TAR archive
+    
     Packs a Rocket's contents as described in the blueprint into a TAR archive for upload
     """
     with tarfile.open(os.path.join(path, rocket_folder + '_launch.tar'), "w") as tar_handle:
@@ -99,12 +100,10 @@ def get_list_rocket_info_from_folder(folder_path: str) -> list:
     """Get the list of rocket_info from folders name inside of a folder.
     
     Args:
-    ====
-    folder_path (str): Path to the folder to test.
+        folder_path (str): Path to the folder to test.
 
-    Outputs:
-    =======
-    list_rocket_info (list): List of rocket_info. 
+    Returns:
+        list_rocket_info (list): List of rocket_info. 
     """
     list_folders = [f for f in os.listdir(folder_path) if not f.startswith('.') and f.count('_') >= 2]
 
@@ -116,17 +115,14 @@ def convert_dict_to_foldername(rocket_info: dict, separation_char: str = '_') ->
     """Convert a dict containing the information about a Rocket to a folder name.
     
     Args:
-    ====
-    rocket_info (dict):  Dictionary containing the information about a Rocket.
-    separation_char (str): Character used to separate the information in the name of the folder.
+        rocket_info (dict):  Dictionary containing the information about a Rocket.
+        separation_char (str): Character used to separate the information in the name of the folder.
 
-    Outputs:
-    =======
-    rocket_folder_name (str): Name of the folder containing the Rocket.
+    Returns:
+        rocket_folder_name (str): Name of the folder containing the Rocket.
 
-    Exceptions:
-    ==========
-    RocketNotEnoughInfo: If there are not enough information to create the folder name
+    Raises:
+        RocketNotEnoughInfo: If there are not enough information to create the folder name
     """
     missing_info = set(['username', 'modelName', 'hash']) - rocket_info.keys()
 
@@ -144,18 +140,15 @@ def convert_slug_to_dict(rocket_slug: str, parsing_char: str = '/', version_type
     All the arguments in the outputted dictionary are String. The <hash> or <label> in the Rocket slug is optional and will not be added to the output dictionary if it is not precised.
     
     Args:
-    ====
-    rocket_slug (str):  The Rocket slug in the shape <username>/<modelName>/(<hash> or <label>). The <hash> and <label> are optional. The <hash> should be complete.
-    parsing_char (str): The character used to parse the information in the slug.
-    version_type (str): The key to use to define the version (either label or hash)
+        rocket_slug (str):  The Rocket slug in the shape <username>/<modelName>/(<hash> or <label>). The <hash> and <label> are optional. The <hash> should be complete.
+        parsing_char (str): The character used to parse the information in the slug.
+        version_type (str): The key to use to define the version (either label or hash)
 
-    Outputs:
-    =======
-    rocket_info (dict): A dict containing the information provided in rocket_slug.
+    Returns:
+        rocket_info (dict): A dict containing the information provided in rocket_slug.
 
-    Exceptions:
-    ==========
-    RocketNotEnoughInfo --> If the <username> and the <modelName> of the Rocket are not in the Rocket slug.
+    Raises:
+        RocketNotEnoughInfo --> If the <username> and the <modelName> of the Rocket are not in the Rocket slug.
     """
     # Cast the rocket_slug to a String with lower case
     rocket_slug = str(rocket_slug).lower()
