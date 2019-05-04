@@ -174,7 +174,7 @@ class RocketAPI:
     def push_rocket(self, 
                     rocket_author: str, 
                     rocket_name: str, 
-                    rocket_version: str, 
+                    rocket_hash: str, 
                     rocket_family:str, 
                     trainingDataset: str,
                     isTrainable: bool,
@@ -196,7 +196,7 @@ class RocketAPI:
         # Push Rocket to Cloud Storage
         storage_file_path = self.push_rocket_to_storage(
                                                 source_file_name=tar_file,
-                                                destination_blob_name=(rocket_author+'_'+rocket_name+'_'+rocket_version+'.tar')) 
+                                                destination_blob_name=(rocket_author+'_'+rocket_name+'_'+rocket_hash+'.tar')) 
 
         payload = ({
             'modelName': rocket_name,
@@ -208,7 +208,7 @@ class RocketAPI:
             'paperUrl': paperUrl,
             'originRepoUrl': originRepoUrl,
             'description': description,
-            'hash': rocket_version,
+            'hash': rocket_hash,
             'downloadUrl': storage_file_path,
         })
 

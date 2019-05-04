@@ -36,27 +36,27 @@ def read_slug(rocket: str):
     assert len(rocket_parsed) > 1, "Please provide more information about the rocket"
     rocket_author = rocket_parsed[0].lower()
     rocket_name   = rocket_parsed[1].lower()
-    rocket_version= rocket_parsed[2] if len(rocket_parsed)>2 else ""
-    return rocket_author, rocket_name, rocket_version
+    rocket_hash= rocket_parsed[2] if len(rocket_parsed)>2 else ""
+    return rocket_author, rocket_name, rocket_hash
 
 def get_rocket_folder(rocket_slug: str):
     """Build Rocket folder name
     """
-    rocket_author, rocket_name, rocket_version = read_slug(rocket_slug)
+    rocket_author, rocket_name, rocket_hash = read_slug(rocket_slug)
     rocket_folder_name = rocket_author+'_'+rocket_name
-    if len(rocket_version) > 7:
-        rocket_folder_name = rocket_folder_name+'_'+rocket_version[:8]
+    if len(rocket_hash) > 7:
+        rocket_folder_name = rocket_folder_name+'_'+rocket_hash[:8]
     print("Rocket folder is {}".format(rocket_folder_name))
     return rocket_folder_name
 
-def get_rocket_version(rocket_path: str):
+def get_rocket_hash(rocket_path: str):
     """Compute SHA-1 Hash of the Rocket Tar
     """
     with open(rocket_path, 'rb') as f:
         buf = f.read()
-        version = hashlib.sha1(buf).hexdigest()
+        _hash = hashlib.sha1(buf).hexdigest()
         assert len(version)>1, "Version hash computation failed"
-    return version
+    return _hash
 
 def check_metadata(data: dict):
     """Verify the completness of the metadata provided in the info.json file
@@ -151,7 +151,7 @@ class Rocket:
             folder_path (str): folder where to find the Rocket
         """
         # Get Rocket information
-        rocket_author, rocket_name, rocket_version = read_slug(rocket)
+        rocket_author, rocket_name, rocket_hash = read_slug(rocket)
 
         # Get path to Rocket
         rocket_path = get_rocket_folder(rocket_slug=rocket)
@@ -170,7 +170,7 @@ class Rocket:
         
         print("Let's get the new version name...")
         # Get new rocket version
-        new_rocket_version = get_rocket_version(path_to_launch_rocket)
+        new_rocket_hash = get_rocket_hash(path_to_launch_rocket)
         
         print("Rocket ready to launch!")
 
@@ -180,7 +180,7 @@ class Rocket:
         launch_success = api.push_rocket(
             rocket_author =rocket_author,
             rocket_name =rocket_name,
-            rocket_version =new_rocket_version,
+            rocket_hash =new_rocket_hash,
             rocket_family = metadata_dict['family'],
             trainingDataset = metadata_dict['dataset'],
             isTrainable = metadata_dict['isTrainable'] if type(metadata_dict['isTrainable']) is bool else False,
