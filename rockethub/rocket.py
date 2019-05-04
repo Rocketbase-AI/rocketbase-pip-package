@@ -232,7 +232,6 @@ class Rocket:
         if rocket_info_api:
             # Create the folder name
             rocket_folder_name = convert_dict_to_foldername(rocket_info_api)
-            print('rocket_folder_name:', rocket_folder_name)
 
             # Rocket already downloaded locally -- No need to download it
             if rocket_folder_name in os.listdir(folder_path):
