@@ -87,6 +87,16 @@ def check_metadata(data: dict):
     assert len(data['model'])>1, "Please provide a model name in info.json"
     assert '_' not in data['model'], "You can not use underscores in the model name"
     assert len(data['family'])>1, "Please provide the family name of the Rocket in info.json"
+    valid_families = [
+        "image_object_detection",
+        "image_human_pose_estimation",
+        "image_classification",
+        "image_superresolution",
+        "image_style_transfer",
+        "image_segmentation",
+        "image_instance_segmentation"
+        ]
+    assert data['family'] in valid_families, "Please enter a valid Rocket family in info.json. For a list of available families, please refer to the documentation."
     assert len(data['dataset'])>1, "Please specify the dataset this Rocket was trained on in info.json"
     assert len(data['rocketRepoUrl'])>1, "Please specify the URL of the Rocket code repository in info.json"
     assert len(data['paperUrl'])>1, "Please specify the URL of the scientific publication in info.json"
