@@ -328,7 +328,7 @@ class Rocket:
         print("Rocket ready to launch!")
 
         # Init API for Rocket Upload
-        api = RocketAPI()
+        api = rockethub.api.RocketAPI()
         # Launch Rocket
         launch_success = api.push_rocket(
             rocket_username =rocket_username,
