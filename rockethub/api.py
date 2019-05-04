@@ -80,8 +80,7 @@ class RocketAPI:
 
         # if status != 200 then database is broken
         if not res.status_code == 200:
-            print('res.status_code:', res.status_code)
-            raise RocketAPIError('Database error. Please try again later.')
+            raise RocketAPIError('Database error. Please try again later. error({})'.format(res.status_code))
 
         models = res.json()
 
