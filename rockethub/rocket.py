@@ -75,6 +75,7 @@ def check_metadata(data: dict):
     assert len(data['originRepoUrl'])>1, "Please specify the URL of the origin code repository in info.json"
     assert len(data['description'])>1, "Please add a description¨of your rocket in info.json"
     assert len(data['blueprint'])>0, "Please add elements to the blueprint in info.json"
+    assert type(data['isTrainable']) is bool, "Please enter 'True' or 'False' for isTrainable in info.json"
 
 def ensure_dir(dir_name: str):
     """Creates folder if not exists.
@@ -186,7 +187,7 @@ class Rocket:
             rocket_hash =new_rocket_hash,
             rocket_family = metadata_dict['family'],
             trainingDataset = metadata_dict['dataset'],
-            isTrainable = metadata_dict['isTrainable'] if type(metadata_dict['isTrainable']) is bool else False,
+            isTrainable = metadata_dict['isTrainable'],
             rocketRepoUrl = metadata_dict['rocketRepoUrl'], 
             paperUrl = metadata_dict['paperUrl'],
             originRepoUrl = metadata_dict['originRepoUrl'],
