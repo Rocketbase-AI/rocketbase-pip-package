@@ -1,6 +1,6 @@
 class RocketNotEnoughInfo(Exception):
     """ 
-    Exception raised when not information are provided to define a Rocket.
+    Exception raised when not enough information is provided to fetch/find a Rocket.
     """
     def __init__(self, message, errors = None):
 
