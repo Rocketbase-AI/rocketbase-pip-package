@@ -197,6 +197,9 @@ class Rocket:
         Args:
             rocket_slug (str): Rocket identifier (username/modelName/(hash or label))
             display_loading (boolean): Display the loading bar. Can be useful to remove it when using it on a server with logs.
+
+        Returns:
+            model (nn.Module): Rocket containing the PyTorch model and the pre/post process model.
         """
         # Define the chunk size for the download
         CHUNK_SIZE = 512
