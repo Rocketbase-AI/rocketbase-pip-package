@@ -261,7 +261,7 @@ class Rocket:
                 if display_loading: pbar.close()
                 
                 rocket_folder_path = unpack_tar_to_rocket(path_to_landing_rocket, rocket_folder_name, folder_path)
-                print('It is a sucess! The Rocket has landed!')
+                print('It is a success! The Rocket has landed!')
 
         else:
             # Get all the rocket_info from the Rockets in the folder
