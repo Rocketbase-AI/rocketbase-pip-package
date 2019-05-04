@@ -184,7 +184,7 @@ def convert_slug_to_dict(rocket_slug: str, parsing_char: str = '/', version_type
 class Rocket:
 
     @staticmethod
-    def land(rocket_slug: str, folder_path = 'rockets', display_loading = True):
+    def land(rocket_slug: str, display_loading = True):
         """ Download or check that the Rocket is ready locally
 
         Download the Rocket if it is not yet locally here.
@@ -196,11 +196,13 @@ class Rocket:
 
         Args:
             rocket_slug (str): Rocket identifier (username/modelName/(hash or label))
-            folder_path (str): folder where the Rockets are stored
             display_loading (boolean): Display the loading bar. Can be useful to remove it when using it on a server with logs.
         """
         # Define the chunk size for the download
         CHUNK_SIZE = 512
+
+        # Define the folder path for the Rocket
+        FOLDER_PATH = 'rockets'
 
         # Parse the Rocket Slug
         rocket_info_user = convert_slug_to_dict(rocket_slug)
@@ -226,7 +228,7 @@ class Rocket:
         # print(rocket_info_api)
 
         # Check if folder to download the rockets exists
-        ensure_dir(folder_path)
+        ensure_dir(FOLDER_PATH)
 
         # If the API returned a Rocket
         if rocket_info_api:
@@ -234,12 +236,12 @@ class Rocket:
             rocket_folder_name = convert_dict_to_foldername(rocket_info_api)
 
             # Rocket already downloaded locally -- No need to download it
-            if rocket_folder_name in os.listdir(folder_path):
+            if rocket_folder_name in os.listdir(FOLDER_PATH):
                 print('Rocket has already landed. Using the local version:', rocket_folder_name)
 
             # Need to download the Rocket
             else:
-                path_to_landing_rocket = os.path.join(folder_path, 'landing_' + rocket_folder_name +'.tar')
+                path_to_landing_rocket = os.path.join(FOLDER_PATH, 'landing_' + rocket_folder_name +'.tar')
 
                 #Download URL
                 print('Rocket approaching...')
@@ -260,12 +262,12 @@ class Rocket:
                 
                 if display_loading: pbar.close()
                 
-                rocket_folder_path = unpack_tar_to_rocket(path_to_landing_rocket, rocket_folder_name, folder_path)
+                rocket_folder_path = unpack_tar_to_rocket(path_to_landing_rocket, rocket_folder_name, FOLDER_PATH)
                 print('It is a success! The Rocket has landed!')
 
         else:
             # Get all the rocket_info from the Rockets in the folder
-            list_rocket_info_local = get_list_rocket_info_from_folder(folder_path)
+            list_rocket_info_local = get_list_rocket_info_from_folder(FOLDER_PATH)
 
             # Get all the folders for the same Rocket (but different versions)
             list_rocket_info_local = [ri for ri in list_rocket_info_local if ri['username'] == rocket_info_user['username'] and ri['modelName'] == rocket_info_user['modelName']]
