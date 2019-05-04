@@ -15,7 +15,12 @@ import rockethub.api
 from rockethub.exceptions import *
 
 
-def unpack_archive(tar_path: str, rocket_folder_name: str, folder_path: str, remove_after_unpack: bool = True):
+def unpack_tar_to_rocket(tar_path: str, rocket_folder_name: str, folder_path: str, remove_after_unpack: bool = True):
+    """Unpack a TAR archive to a Rocket folder
+
+    Unpack a TAR archive in a specific folder, rename it and then remove the tar file (or not if the user wants to)
+
+    """
     t = tarfile.open(tar_path, 'r')
     tar_folder_name = os.path.commonprefix(t.getnames())
     t.extractall(folder_path) # unpack in the wrong folder
@@ -250,7 +255,7 @@ class Rocket:
                 
                 if display_loading: pbar.close()
                 
-                rocket_folder_path = unpack_archive(path_to_landing_rocket, rocket_folder_name, folder_path)
+                rocket_folder_path = unpack_tar_to_rocket(path_to_landing_rocket, rocket_folder_name, folder_path)
                 print('It is a sucess! The Rocket has landed!')
 
         else:
