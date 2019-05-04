@@ -152,7 +152,7 @@ class RocketAPI:
         return 'v' + str(mainVersion) +  minorVersion
 
 
-    def push_rocket_to_storage(self, rocket: str, source_file_name: str, destination_blob_name: str, chunk_size=512):
+    def push_file_to_rocket_storage(self, source_file_name: str, destination_blob_name: str):
         """Push the latest version of a Rocket to the Cloud Storage
 
         Args:
@@ -168,44 +168,59 @@ class RocketAPI:
 
         with open(source_file_name, 'rb') as f:
             blob.upload_from_file(f)
-            f.close()
 
         return blob.public_url
 
-    def push_rocket(self, rocket_author: str, model: str, version: str, isPrivate: bool, tar_file: str):
+    def push_rocket(self, 
+                    rocket_username: str, 
+                    rocket_modelName: str, 
+                    rocket_hash: str, 
+                    rocket_family:str, 
+                    trainingDataset: str,
+                    isTrainable: bool,
+                    rocketRepoUrl: str,
+                    paperUrl: str,
+                    originRepoUrl:str,
+                    description: str,
+                    tar_file: str):
         """Push the latest version of a Rocket to the cloud
 
         Args:
-            rocket_author (str): Author of the new Rocket
-            model (str): Name of the Model contained in the Rocket
-            version (str): Version number of the Rocket
-            modelFilePath (str): Name of the path of the Rocket in Cloud Storage
-            isPrivate (bool): Flag accessibility for Rocket
-            tar_file (str): Path to the Rocket tar-file
+            rocket_username (str): Author of the new Rocket
+            rocket_modelName (str): Name of the Model contained in the Rocket
+            rocket_hash (str): Version hash of the Rocket
+            rocket_family (str): Rocket family this Rocket belongs to
+            trainingDataset (str): Dataset name this Rocket was trained on
+            isTrainable (str): Flag to indicate whether this Rocket has necessary components for training
+            rocketRepoUrl (str): URL of the repository of the Rocket code
+            paperUrl (str): URL of the original research publication
+            originRepoUrl (str): URL of the original repository of the model
+            description (str): Short description of the Rocket and its details
+            tar_file (str): Path to the TAR archive of the Rocket
         """
-        assert len(rocket_author) > 0, "Please provide an author name"
-        assert len(model) > 0, "Please provide a model name"
-        assert len(version) > 0, "Please provide a valid version tag"
-
         # Push Rocket to Cloud Storage
-        storage_file_path = self.push_rocket_to_storage(
-                                                rocket='',
+        storage_file_path = self.push_file_to_rocket_storage(
                                                 source_file_name=tar_file,
-                                                destination_blob_name=(rocket_author+'-'+model+'-'+version+'.tar')) 
+                                                destination_blob_name=(rocket_username+'_'+rocket_modelName+'_'+rocket_hash+'.tar')) 
 
         payload = ({
-            'author': rocket_author,
-            'model': model,
-            'version': version,
-            'folderName': (rocket_author+'_'+model+'_'+version),
-            'modelFilePath': storage_file_path,
-            'isPrivate': isPrivate
+            'modelName': rocket_modelName,
+            'username': rocket_username,
+            'family': rocket_family,
+            'trainingDataset': trainingDataset,
+            'isTrainable': isTrainable,
+            'rocketRepoUrl': rocketRepoUrl,
+            'paperUrl': paperUrl,
+            'originRepoUrl': originRepoUrl,
+            'description': description,
+            'hash': rocket_hash,
+            'downloadUrl': storage_file_path,
         })
 
         headers = {'Content-type': 'application/json'}
 
         res = requests.post(self.push_url, json = payload, headers=headers)
 
-        assert res.status_code == 201, "Push Rocket Update has failed!"
+        assert res.status_code == 201, "Push Rocket Update has failed! Status code : {} \n\n Response message:\n {}".format(res.status_code, res.text)
         
         return res.status_code == 201
