@@ -152,7 +152,7 @@ class RocketAPI:
         return 'v' + str(mainVersion) +  minorVersion
 
 
-    def push_rocket_to_storage(self, source_file_name: str, destination_blob_name: str, chunk_size=512):
+    def push_file_to_rocket_storage(self, source_file_name: str, destination_blob_name: str):
         """Push the latest version of a Rocket to the Cloud Storage
 
         Args:
@@ -199,7 +199,7 @@ class RocketAPI:
             tar_file (str): Path to the TAR archive of the Rocket
         """
         # Push Rocket to Cloud Storage
-        storage_file_path = self.push_rocket_to_storage(
+        storage_file_path = self.push_file_to_rocket_storage(
                                                 source_file_name=tar_file,
                                                 destination_blob_name=(rocket_username+'_'+rocket_modelName+'_'+rocket_hash+'.tar')) 
 
