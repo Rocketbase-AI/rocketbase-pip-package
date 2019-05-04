@@ -48,7 +48,7 @@ def get_rocket_folder(rocket_slug: str):
     rocket_username, rocket_modelName, rocket_hash = read_slug(rocket_slug)
     rocket_folder_name = rocket_username+'_'+rocket_modelName
     if len(rocket_hash) > 7:
-        rocket_folder_name = rocket_folder_name+'_'+rocket_hash[:8]
+        rocket_folder_name = rocket_folder_name+'_'+rocket_hash
     print("Rocket folder is {}".format(rocket_folder_name))
     return rocket_folder_name
 
