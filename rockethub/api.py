@@ -53,15 +53,14 @@ class RocketAPI:
                 os.remove("gcredentials.json")
 
 
-    def get_rocket_info(self, rocket_info: dict, verbose: bool = True):
-        """ Parse the Rocket identifier.
-
-        The Rocket identifier is a String following this pattern: rocket_author/rocket_name/rocket_version
-        The rocket_version is not mandatory and if not provided by the user the newest version will be returned.
+    def get_rocket_info(self, rocket_info: dict):
+        """ Get the information about the best Rocket in the API
 
         Args:
-        ====
-        rocket_info (dict) --> Information about the Rocket to get the info from (e.g. {'builder': 'igor', 'name': 'retinanet'}). Only <builder> and <name> are necessary. The API will always returned the default model. If one wants a precise model, they should also include the <hash> of the Rocket.
+            rocket_info (dict): Basic information about the Rocket to request (e.g. {'username': 'igor', 'modelName': 'retinanet'}). The API will always returned the default model. If one wants a precise model, they should also include the <label> of the Rocket which can be its hash or a user defined string.
+
+        Returns:
+            models (list): List of models returned by the API corresponding to the criteria of the rocket_info.
         """
         # Check that at least the builder and the name of the Rocket are in the Rocket info
         if not set(['username', 'modelName']).issubset(rocket_info.keys()):
@@ -71,12 +70,10 @@ class RocketAPI:
 
         if 'label' in rocket_info.keys():
             payload['label'] = rocket_info['label']
-
-        print('payload:', payload)
         
-        if verbose:
-            printable_rocket_name = payload['modelName'] + '(' +  payload['label'] + ')' if 'label' in payload.keys() else payload['modelName']
-            print('Looking for the Rocket \'' + printable_rocket_name + '\' made by \'' + payload['username'] + '\'...')
+        printable_rocket_name = '\'' + payload['modelName'] + '\'(' +  payload['label'] + ')' if 'label' in payload.keys() else '\'' + payload['modelName']+ '\''
+        
+        print('Looking for the Rocket ' + printable_rocket_name + ' made by \'' + payload['username'] + '\'...')
         
         # Make the request (exceptions are catched outside)
         res = requests.get(self.models_api_url, params=payload)
@@ -86,15 +83,15 @@ class RocketAPI:
             print('res.status_code:', res.status_code)
             raise RocketAPIError('Database error. Please try again later.')
 
-        self.models = res.json()
+        models = res.json()
 
         # Test that the rocket exists
-        if not self.models:
-            raise RocketNotFound('\'' + str(rocket) + '\' rocket cannot be found from our database. Please check the spelling.')
+        if not models:
+            raise RocketNotFound('Rocket cannot be found from our database. Please check the spelling. ' + rocket_info['username'] + '/' + rocket_info['modelName'])
        
-        if verbose: print('{models_len} model versions found from the database.'.format(models_len=len(self.models)))
+        print('{models_len} model versions found from the database.'.format(models_len=len(models)))
         
-        return self.models
+        return models
 
     def get_rocket_url(self, rocket_author: str, rocket_name: str, rocket_version: str):
         """ Get the url from which to download the Rocket.
