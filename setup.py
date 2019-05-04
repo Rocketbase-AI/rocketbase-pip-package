@@ -4,30 +4,29 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name='rockethub',
+    name='rocketbase',
     packages=setuptools.find_packages(),
-    version='0.2.0',
+    version='0.3.1',
     license='Proprietary',
-    description='Accelerating Machine Learning Research',
+    description='Making Machine Learning available to everyone',
     long_description=long_description,
     long_description_content_type="text/markdown",
     author='Mirage Technologies AG',
     author_email='hello@mirage.id',
-    url='https://rockethub.ai',
-    keywords=['Automating', 'ML', 'Research'],
+    url='https://rocketbase.ai',
+    keywords=['automatic', 'ML', 'deployment', 'pytorch', 'pretrained'],
     install_requires=[
         'tqdm',
         'requests',
         'google-cloud-storage'
     ],
     classifiers=[
-        # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable" as the current state of your package
-        'Development Status :: 2 - Pre-Alpha',
+        # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable"
+        'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ],
 )

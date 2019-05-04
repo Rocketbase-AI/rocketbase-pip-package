@@ -11,8 +11,8 @@ import types
 from datetime import datetime
 from tqdm import tqdm
 
-import rockethub.api
-from rockethub.exceptions import *
+import rocketbase.api
+from rocketbase.exceptions import *
 
 
 def unpack_tar_to_rocket(tar_path: str, rocket_folder_name: str, folder_path: str, remove_after_unpack: bool = True):
@@ -221,7 +221,7 @@ class Rocket:
         rocket_info_user = convert_slug_to_dict(rocket_slug)
 
         # Create the API object
-        api = rockethub.api.RocketAPI()
+        api = rocketbase.api.RocketAPI()
 
         # Check if the rocket exists and get the last version if not precised
         try:
@@ -229,12 +229,12 @@ class Rocket:
         except requests.exceptions.RequestException as e:  # Catch all the Exceptions relative to the request
             print('Problem with the API:', e)
             rocket_info_api = {}
-        except rockethub.api.RocketNotEnoughInfo as e:
+        except rocketbase.api.RocketNotEnoughInfo as e:
             sys.exit(e)
-        except rockethub.api.RocketAPIError as e:
+        except rocketbase.api.RocketAPIError as e:
             print('API Error:', e)
             rocket_info_api = {}
-        except rockethub.api.RocketNotFound as e: 
+        except rocketbase.api.RocketNotFound as e: 
             print('No Rocket found with the API using the slug:', rocket_slug)
             rocket_info_api = {}
 
@@ -347,7 +347,7 @@ class Rocket:
         print("Rocket ready to launch!")
 
         # Init API for Rocket Upload
-        api = rockethub.api.RocketAPI()
+        api = rocketbase.api.RocketAPI()
         # Launch Rocket
         launch_success = api.push_rocket(
             rocket_username =rocket_username,

@@ -4,7 +4,7 @@ import json
 import os
 import requests
 
-from rockethub.exceptions import *
+from rocketbase.exceptions import *
 
 import google
 from google.auth.transport.requests import AuthorizedSession
@@ -75,7 +75,7 @@ class RocketAPI:
         printable_rocket_name = '\'' + payload['modelName'] + '\'(' +  payload['label'] + ')' if 'label' in payload.keys() else '\'' + payload['modelName']+ '\''
         
         print('Looking for the Rocket ' + printable_rocket_name + ' made by \'' + payload['username'] + '\'...')
-        
+
         # Make the request (exceptions are catched outside)
         res = requests.get(self.models_api_url, params=payload)
 
