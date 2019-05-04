@@ -168,7 +168,7 @@ class Rocket:
         # Pack folder into archive
         path_to_launch_rocket = pack_archive(folder_path, rocket_path, blueprint=metadata_dict['blueprint'])
         
-        print("Let's get the new version number...")
+        print("Let's get the new version name...")
         # Get new rocket version
         new_rocket_version = get_rocket_version(path_to_launch_rocket)
         
