@@ -160,12 +160,12 @@ def convert_slug_to_dict(rocket_slug: str, parsing_char: str = '/', version_type
 
     # Check if the rocket_slug is not empty
     if len(rocket_slug) < 1: 
-            raise RocketNotEnoughInfo('Please specify the slug of the Rocket you want to get (e.g. igor/retinanet).')
+            raise RocketNotEnoughInfo('Please specify the slug of the Rocket you want to get (e.g. <username>/<modelName>).')
         
     # Parse the Rocket url
     rocket_parsed = rocket_slug.split(parsing_char)
     if len(rocket_parsed) < 1:
-        raise RocketNotEnoughInfo('\'' + rocket_slug + '\' is not a correct slug for a Rocket. Please provide more information about the Rocket you want to get (e.g. igor/retinanet).')
+        raise RocketNotEnoughInfo('\'' + rocket_slug + '\' is not a correct slug for a Rocket. Please provide more information about the Rocket you want to get (<username>/<modelName>).')
 
     rocket_username  = str(rocket_parsed[0])
     rocket_modelName = str(rocket_parsed[1])
