@@ -78,7 +78,7 @@ def check_metadata(data: dict):
     assert len(data['originRepoUrl'])>1, "Please specify the URL of the origin code repository in info.json"
     assert len(data['description'])>1, "Please add a description¨of your rocket in info.json"
     assert len(data['blueprint'])>0, "Please add elements to the blueprint in info.json"
-    assert type(data['isTrainable']) is bool, "Please enter 'True' or 'False' for isTrainable in info.json"
+    assert type(data['isTrainable']) is bool, "Please enter 'true' or 'false' for isTrainable in info.json"
 
 def ensure_dir(dir_name: str):
     """Creates folder if not exists.
