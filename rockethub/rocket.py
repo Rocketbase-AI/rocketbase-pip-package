@@ -153,7 +153,7 @@ def convert_slug_to_dict(rocket_slug: str, parsing_char: str = '/', version_type
         rocket_info (dict): A dict containing the information provided in rocket_slug.
 
     Raises:
-        RocketNotEnoughInfo --> If the <username> and the <modelName> of the Rocket are not in the Rocket slug.
+        RocketNotEnoughInfo: If the <username> and the <modelName> of the Rocket are not in the Rocket slug.
     """
     # Cast the rocket_slug to a String with lower case
     rocket_slug = str(rocket_slug).lower()
