@@ -184,7 +184,7 @@ def convert_slug_to_dict(rocket_slug: str, parsing_char: str = '/', version_type
 class Rocket:
 
     @staticmethod
-    def land(rocket_slug: str, folder_path = 'rockets', chunk_size = 512, display_loading = True):
+    def land(rocket_slug: str, folder_path = 'rockets', display_loading = True):
         """ Download or check that the Rocket is ready locally
 
         Download the Rocket if it is not yet locally here.
@@ -192,9 +192,11 @@ class Rocket:
         Args:
             rocket_slug (str): Rocket identifier (username/modelName/(hash or label))
             folder_path (str): folder where the Rockets are stored
-            chunk_size (int): size of the chunk when downloading the Rocket
             display_loading (boolean): Display the loading bar. Can be useful to remove it when using it on a server with logs.
         """
+        # Define the chunk size for the download
+        CHUNK_SIZE = 512
+
         # Parse the Rocket Slug
         rocket_info_user = convert_slug_to_dict(rocket_slug)
 
@@ -247,10 +249,10 @@ class Rocket:
             
                 if display_loading: pbar = tqdm(total=content_length, ascii=True, desc='Rocket Landing')
                 with open(path_to_landing_rocket, 'wb') as handle:
-                    for data in response.iter_content(chunk_size = chunk_size):
+                    for data in response.iter_content(chunk_size = CHUNK_SIZE):
                         handle.write(data)
                         # update the progress bar
-                        if display_loading: pbar.update(chunk_size)
+                        if display_loading: pbar.update(CHUNK_SIZE)
                 
                 if display_loading: pbar.close()
                 
