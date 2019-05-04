@@ -3,13 +3,14 @@ import itertools
 import json
 import os
 import requests
+
 from rockethub.exceptions import *
 
 import google
+from google.auth.transport.requests import AuthorizedSession
 from google.cloud import storage
 from google.resumable_media import requests as gRequests
 from google.resumable_media import common
-from google.auth.transport.requests import AuthorizedSession
 
 class RocketAPI:
     def __init__(self):

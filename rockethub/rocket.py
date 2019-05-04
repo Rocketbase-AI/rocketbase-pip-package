@@ -1,18 +1,19 @@
-import tarfile
-import os
-import sys
 import glob
 import hashlib
 import importlib
 import json
 import os
 import requests
+import sys
 import tarfile
 import types
+
+from datetime import datetime
 from tqdm import tqdm
+
 import rockethub.api
 from rockethub.exceptions import *
-from datetime import datetime
+
 
 def unpack_archive(tar_path: str, rocket_folder_name: str, folder_path: str, remove_after_unpack: bool = True):
     t = tarfile.open(tar_path, 'r')
