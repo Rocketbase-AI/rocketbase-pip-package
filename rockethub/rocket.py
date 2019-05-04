@@ -53,7 +53,10 @@ def get_rocket_folder(rocket_slug: str):
     return rocket_folder_name
 
 def get_rocket_hash(rocket_path: str):
-    """Compute SHA-1 Hash of the Rocket Tar
+    """Compute SHA-1 Hash of the Rocket TAR archive
+
+    Args:
+        rocket_path (str): Path to the TAR archive of the Rocket, not the Rocket folder
     """
     with open(rocket_path, 'rb') as f:
         buf = f.read()
