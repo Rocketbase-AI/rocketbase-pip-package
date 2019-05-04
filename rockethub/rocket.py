@@ -1,11 +1,8 @@
-<<<<<<< HEAD
 import tarfile
 import os
 import sys
-=======
 import glob
 import hashlib
->>>>>>> master
 import importlib
 import json
 import os
@@ -297,11 +294,7 @@ class Rocket:
         return model
 
     @staticmethod
-<<<<<<< HEAD
-    def launch(rocket: str, isPrivate: bool, folder_path = "rockets", verbose = 'True'):
-=======
     def launch(rocket: str, folder_path = "rockets"):
->>>>>>> master
         """ Upload the latest Rocket that is ready localy
 
         Upload the latest version of the Rocket that is localy available
@@ -323,13 +316,6 @@ class Rocket:
             assert str(metadata_dict['builder']) == str(rocket_username), "The Rocket author name does not match the information in info.json. {} vs {}".format(rocket_username, metadata_dict['builder'])
             assert str(metadata_dict['model']) == str(rocket_modelName), "The Rocket model name does not match the information in info.json. {} vs {}".format(rocket_modelName, metadata_dict['model'])
 
-<<<<<<< HEAD
-        # Pack folder into archive
-        if verbose: print("Let's load everything into the Rocket...")
-        path_to_folder = folder_path + '/' +api.get_rocket_folder(rocket_author, rocket_name, rocket_version)
-        path_to_launch_rocket = pack_archive(folder_path, _name)
-        if verbose: print("Rocket ready to launch!")
-=======
         print("Let's load everything into the Rocket...")
         
         # Pack folder into archive
@@ -340,7 +326,6 @@ class Rocket:
         new_rocket_hash = get_rocket_hash(path_to_launch_rocket)
         
         print("Rocket ready to launch!")
->>>>>>> master
 
         # Init API for Rocket Upload
         api = RocketAPI()
@@ -358,11 +343,7 @@ class Rocket:
             description = metadata_dict['description'],
             tar_file=path_to_launch_rocket)
 
-<<<<<<< HEAD
-        if verbose: print('Rocket reached its destination.')
-=======
         print('Rocket reached its destination.' if launch_success else "There was a problem with the launch")
         if launch_success:
             os.remove(path_to_launch_rocket)
->>>>>>> master
         return launch_success
