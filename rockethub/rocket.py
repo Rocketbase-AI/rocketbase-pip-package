@@ -20,7 +20,10 @@ def unpack_archive(path: str):
 
     return model_name
 
-def pack_archive(path: str, rocket_folder: str, blueprint: list):
+def pack_rocket_to_tar(path: str, rocket_folder: str, blueprint: list):
+    """Packs a Rocket into a TAR archive
+    Packs a Rocket's contents as described in the blueprint into a TAR archive for upload
+    """
     with tarfile.open(os.path.join(path, rocket_folder + '_launch.tar'), "w") as tar_handle:
         for filename in glob.glob(os.path.join(path, rocket_folder)+"/**/*", recursive=True):
             _filename = filename.replace(os.path.join(path, rocket_folder), "").replace(str(os.sep), "", 1).replace(str(os.sep), "/")
@@ -166,7 +169,7 @@ class Rocket:
         print("Let's load everything into the Rocket...")
         
         # Pack folder into archive
-        path_to_launch_rocket = pack_archive(folder_path, rocket_path, blueprint=metadata_dict['blueprint'])
+        path_to_launch_rocket = pack_rocket_to_tar(folder_path, rocket_path, blueprint=metadata_dict['blueprint'])
         
         print("Let's get the new version name...")
         # Get new rocket version
