@@ -189,6 +189,11 @@ class Rocket:
 
         Download the Rocket if it is not yet locally here.
 
+        In this function we are comparing 3 different source of information:
+            - rocket_info_user: the information provided by the user in the rocket_slug.
+            - rocket_info_api: the information provided by the api.
+            - rocket_info_local: the information provided by the folder name of the local Rockets.
+
         Args:
             rocket_slug (str): Rocket identifier (username/modelName/(hash or label))
             folder_path (str): folder where the Rockets are stored
