@@ -173,7 +173,7 @@ class Rocket:
         path_to_launch_rocket = pack_rocket_to_tar(folder_path, rocket_path, blueprint=metadata_dict['blueprint'])
         
         print("Let's get the new version name...")
-        # Get new rocket version
+        # Get new rocket hash
         new_rocket_hash = get_rocket_hash(path_to_launch_rocket)
         
         print("Rocket ready to launch!")
