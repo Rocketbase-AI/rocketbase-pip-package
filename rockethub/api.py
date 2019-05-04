@@ -86,7 +86,7 @@ class RocketAPI:
 
         # Test that the rocket exists
         if not models:
-            raise RocketNotFound('Rocket cannot be found from our database. Please check the spelling. ' + rocket_info['username'] + '/' + rocket_info['modelName'])
+            raise RocketNotFound('Rocket cannot be found in our database. Please check the spelling. ' + rocket_info['username'] + '/' + rocket_info['modelName'])
        
         print('{models_len} model versions found from the database.'.format(models_len=len(models)))
         
