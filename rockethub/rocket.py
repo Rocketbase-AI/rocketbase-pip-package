@@ -61,7 +61,7 @@ def get_rocket_hash(rocket_path: str):
     with open(rocket_path, 'rb') as f:
         buf = f.read()
         _hash = hashlib.sha1(buf).hexdigest()
-        assert len(version)>1, "Version hash computation failed"
+        assert len(_hash)>1, "Version hash computation failed"
     return _hash
 
 def check_metadata(data: dict):
