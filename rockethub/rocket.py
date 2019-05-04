@@ -1,8 +1,11 @@
-import tarfile
-import os
+import glob
+import hashlib
 import importlib
-import types
+import json
+import os
 import requests
+import tarfile
+import types
 from tqdm import tqdm
 from rockethub.api import RocketAPI
 from datetime import datetime
@@ -17,13 +20,65 @@ def unpack_archive(path: str):
 
     return model_name
 
-def pack_archive(path: str, rocketName: str):
-    with tarfile.open(os.path.join(path, rocketName + '_launch.tar'), "w") as tar_handle:
-        for root, dirs, files in os.walk(path):
-            for file in files:
-                tar_handle.add(os.path.join(root, file))
+def pack_rocket_to_tar(path: str, rocket_folder: str, blueprint: list):
+    """Packs a Rocket into a TAR archive
+    Packs a Rocket's contents as described in the blueprint into a TAR archive for upload
+    """
+    with tarfile.open(os.path.join(path, rocket_folder + '_launch.tar'), "w") as tar_handle:
+        for filename in glob.glob(os.path.join(path, rocket_folder)+"/**/*", recursive=True):
+            _filename = filename.replace(os.path.join(path, rocket_folder), "").replace(str(os.sep), "", 1).replace(str(os.sep), "/")
+            if _filename in blueprint:
+                tar_handle.add(filename)
 
-    return os.path.join(path, rocketName + '_launch.tar')
+    return os.path.join(path, rocket_folder + '_launch.tar')
+
+def read_slug(rocket: str):
+    """Parse the Rocket URL
+    """
+    rocket_parsed = rocket.split('/')
+    assert len(rocket_parsed) > 1, "Please provide more information about the rocket"
+    rocket_username = rocket_parsed[0].lower()
+    rocket_modelName   = rocket_parsed[1].lower()
+    rocket_hash= rocket_parsed[2] if len(rocket_parsed)>2 else ""
+    return rocket_username, rocket_modelName, rocket_hash
+
+def get_rocket_folder(rocket_slug: str):
+    """Build Rocket folder name
+    """
+    rocket_username, rocket_modelName, rocket_hash = read_slug(rocket_slug)
+    rocket_folder_name = rocket_username+'_'+rocket_modelName
+    if len(rocket_hash) > 7:
+        rocket_folder_name = rocket_folder_name+'_'+rocket_hash
+    print("Rocket folder is {}".format(rocket_folder_name))
+    return rocket_folder_name
+
+def get_rocket_hash(rocket_path: str):
+    """Compute SHA-1 Hash of the Rocket TAR archive
+
+    Args:
+        rocket_path (str): Path to the TAR archive of the Rocket, not the Rocket folder
+    """
+    with open(rocket_path, 'rb') as f:
+        buf = f.read()
+        _hash = hashlib.sha1(buf).hexdigest()
+        assert len(_hash)>1, "Version hash computation failed"
+    return _hash
+
+def check_metadata(data: dict):
+    """Verify the completness of the metadata provided in the info.json file
+    """
+    assert len(data['builder'])>1, "Please provide a builder name in info.json"
+    assert '_' not in data['builder'], "You can not use underscores in the builder name"
+    assert len(data['model'])>1, "Please provide a model name in info.json"
+    assert '_' not in data['model'], "You can not use underscores in the model name"
+    assert len(data['family'])>1, "Please provide the family name of the Rocket in info.json"
+    assert len(data['dataset'])>1, "Please specify the dataset this Rocket was trained on in info.json"
+    assert len(data['rocketRepoUrl'])>1, "Please specify the URL of the Rocket code repository in info.json"
+    assert len(data['paperUrl'])>1, "Please specify the URL of the scientific publication in info.json"
+    assert len(data['originRepoUrl'])>1, "Please specify the URL of the origin code repository in info.json"
+    assert len(data['description'])>1, "Please add a description¨of your rocket in info.json"
+    assert len(data['blueprint'])>0, "Please add elements to the blueprint in info.json"
+    assert type(data['isTrainable']) is bool, "Please enter 'true' or 'false' for isTrainable in info.json"
 
 def ensure_dir(dir_name: str):
     """Creates folder if not exists.
@@ -93,7 +148,7 @@ class Rocket:
         return model
 
     @staticmethod
-    def launch(rocket: str, isPrivate: bool, folder_path = "rockets"):
+    def launch(rocket: str, folder_path = "rockets"):
         """ Upload the latest Rocket that is ready localy
 
         Upload the latest version of the Rocket that is localy available
@@ -102,26 +157,47 @@ class Rocket:
             rocket (str): Rocket Identifier (author/name/(version))
             folder_path (str): folder where to find the Rocket
         """
-        # Init API for Rocket Upload
-        api = RocketAPI()
+        # Get Rocket information
+        rocket_username, rocket_modelName, rocket_hash = read_slug(rocket)
 
-        rocket_author, rocket_name, rocket_version = api.get_rocket_info(rocket)
-        
-        _name = rocket_author + '_' + rocket_name + '_' + rocket_version
+        # Get path to Rocket
+        rocket_path = get_rocket_folder(rocket_slug=rocket)
 
-        # Pack folder into archive
+        # Open info.json to verify information
+        with open(os.path.join(folder_path, rocket_path, 'info.json')) as metadata_file:
+            metadata_dict = json.load(metadata_file)
+            check_metadata(metadata_dict)
+            assert str(metadata_dict['builder']) == str(rocket_username), "The Rocket author name does not match the information in info.json. {} vs {}".format(rocket_username, metadata_dict['builder'])
+            assert str(metadata_dict['model']) == str(rocket_modelName), "The Rocket model name does not match the information in info.json. {} vs {}".format(rocket_modelName, metadata_dict['model'])
+
         print("Let's load everything into the Rocket...")
-        path_to_folder = folder_path + '/' +api.get_rocket_folder(rocket_author, rocket_name, rocket_version)
-        path_to_launch_rocket = pack_archive(folder_path, _name)
+        
+        # Pack folder into archive
+        path_to_launch_rocket = pack_rocket_to_tar(folder_path, rocket_path, blueprint=metadata_dict['blueprint'])
+        
+        print("Let's get the new version name...")
+        # Get new rocket hash
+        new_rocket_hash = get_rocket_hash(path_to_launch_rocket)
+        
         print("Rocket ready to launch!")
 
+        # Init API for Rocket Upload
+        api = RocketAPI()
         # Launch Rocket
         launch_success = api.push_rocket(
-            rocket_author=rocket_author,
-            model=rocket_name,
-            version=rocket_version,
-            isPrivate=isPrivate,
+            rocket_username =rocket_username,
+            rocket_modelName =rocket_modelName,
+            rocket_hash =new_rocket_hash,
+            rocket_family = metadata_dict['family'],
+            trainingDataset = metadata_dict['dataset'],
+            isTrainable = metadata_dict['isTrainable'],
+            rocketRepoUrl = metadata_dict['rocketRepoUrl'], 
+            paperUrl = metadata_dict['paperUrl'],
+            originRepoUrl = metadata_dict['originRepoUrl'],
+            description = metadata_dict['description'],
             tar_file=path_to_launch_rocket)
 
-        print('Rocket reached its destination.')
+        print('Rocket reached its destination.' if launch_success else "There was a problem with the launch")
+        if launch_success:
+            os.remove(path_to_launch_rocket)
         return launch_success
