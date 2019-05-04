@@ -190,7 +190,7 @@ class Rocket:
         Download the Rocket if it is not yet locally here.
 
         Args:
-            rocket_slug (str): Rocket identifier (author/name/(hash or tag))
+            rocket_slug (str): Rocket identifier (username/modelName/(hash or label))
             folder_path (str): folder where the Rockets are stored
             chunk_size (int): size of the chunk when downloading the Rocket
             display_loading (boolean): Display the loading bar. Can be useful to remove it when using it on a server with logs.
