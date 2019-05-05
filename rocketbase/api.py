@@ -68,11 +68,17 @@ class RocketAPI:
 
         In order to set the Google Cloud Storage Client that will allow us to upload files to the Google Cloud Storage we will first need to download the service credentials and then use them to create the Cloud Client.
 
+        Raises:
+            RequestException: If the request to get the credentials failed in the process.
+            CloudStorageCredentials: If the request to get the credentials finished but was not successful.
+            CloudStorageRelatedExceptions: If the creation of the Google Cloud Storage Client failed. It can be a lot of different ones.
+
         """
         try:
             res = requests.get(self.credentials_api_url)
         except requests.exceptions.RequestException as e:  # Catch all the Exceptions relative to the request
-            print('Problem retrieving the Cloud Storage Credentials:', e)
+            print('Problem retrieving the Cloud Storage Credentials')
+            raise e
         else:
             # Raise exception if the retrieval of the credentials failed
             if not res.status_code == 200:
@@ -117,7 +123,7 @@ class RocketAPI:
         Returns:
             downloadUrl (str): Direct URL to download the upload file.
         """
-        # 
+        # Set the Google Cloud Storage Client to upload the Rocket
         self.set_google_cloud_storage_client()
 
         #
