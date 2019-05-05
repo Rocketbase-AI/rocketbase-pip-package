@@ -83,3 +83,45 @@ def get_file_SHA1_hash(file_path: str):
         raise rocketbase.exceptions.RocketHashNotValid('SHA-1 hash computation failed on file: {}'.format(file_path))
 
     return hash
+
+# --- INFO CONVERSION ---
+def convert_slug_to_dict(rocket_slug: str, parsing_char: str = '/', version_type: str = 'label') -> dict:
+    """Convert a Rocket slug to a dictionary.
+    
+    Convert a Rocket slug of the shape <username>/<modelName/(<hash> or <label>) (e.g. igor/retinanet) to a dictonary with the following structure: {'username': <username>, 'modelName': <name>, '<version_type>': <hash> or <label>}.
+    All the arguments in the outputted dictionary are String. The <hash> or <label> in the Rocket slug is optional and will not be added to the output dictionary if it is not in the slug.
+    
+    Args:
+        rocket_slug (str):  The Rocket slug in the shape <username>/<modelName>/(<hash> or <label>). The <hash> and <label> are optional. The <hash> should be complete.
+        parsing_char (str): The character used to parse the information in the slug.
+        version_type (str): The key to define the version (either label or hash)
+
+    Returns:
+        rocket_info (dict): A dict containing the information provided in rocket_slug.
+
+    Raises:
+        RocketNotEnoughInfo: If the <username> and/or the <modelName> of the Rocket are missing in the Rocket slug.
+    """
+    # Cast the rocket_slug to a String with lower case
+    rocket_slug = str(rocket_slug).lower()
+
+    # Check if the rocket_slug is not empty
+    if len(rocket_slug) < 1: 
+            raise rocketbase.exceptions.RocketNotEnoughInfo('Please specify the slug of the Rocket you want to get (e.g. <username>/<modelName>).')
+        
+    # Parse the Rocket url
+    rocket_parsed = rocket_slug.split(parsing_char)
+    if len(rocket_parsed) < 1:
+        raise rocketbase.exceptions.RocketNotEnoughInfo('\'{}\' is not a correct slug for a Rocket. Please provide more information about the Rocket you want to get (<username>/<modelName>).'.format(rocket_slug))
+
+    rocket_username  = str(rocket_parsed[0])
+    rocket_modelName = str(rocket_parsed[1])
+
+    rocket_info = {'username': rocket_username, 'modelName': rocket_modelName}
+    
+    # Check if a specific hash or label has been precised
+    if len(rocket_parsed) > 2:
+        rocket_label = parsing_char.join(rocket_parsed[2:])
+        rocket_info[version_type] = rocket_label
+
+    return rocket_info
