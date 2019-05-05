@@ -97,7 +97,7 @@ def get_file_SHA1_hash(file_path: str):
         hash (str): SHA-1 hash of the referenced file.
     
     Raises:
-
+        RocketHashNotValid: If the computed SHA-1 has a different length from the constant LENGTH_SHA1_HASH.
     """
     LENGTH_SHA1_HASH = 40
 
@@ -190,9 +190,9 @@ def convert_dict_to_foldername(rocket_info: dict, separation_char: str = '_') ->
     return rocket_folder_name
 
 def import_rocket_info_from_rocket_folder(rocket_folder_path: str, metadata_json_filename: str = 'info.json'):
-    """ Import the metadata information about a Rocket from its folder
+    """ Import the metadata information about a Rocket from its folder.
 
-        Rocket's metadata information:
+        Import the information in the json file named with <metadata_json_filename> and check the information to see if they corresponds to LIST_REQUIRED_INFO and LIST_ROCKET_FAMILIES.
 
     Args:
         rocket_folder_path (str): path to the Rocket's folder
@@ -200,6 +200,10 @@ def import_rocket_info_from_rocket_folder(rocket_folder_path: str, metadata_json
     
     Returns:
         rocket_info (dict): dictionary containing all the Rocket metadata information. 
+    
+    Raises:
+        RocketNotEnoughInfo: If there is not enough information in the json file to launch the Rocket.
+        RocketInfoFormat: If some information about the Rocket are not formatted the right way.
     """
     # Path to the file containing the information about the Rocket
     metadata_json_path = os.path.join(rocket_folder_path, metadata_json_filename)
