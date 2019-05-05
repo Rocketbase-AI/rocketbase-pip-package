@@ -1,9 +1,35 @@
 import glob
+import json
 import hashlib
 import os
 import tarfile
 
 import rocketbase.exceptions
+
+# --- CONSTANTS ---
+# List of all the required information
+LIST_REQUIRED_INFO = [
+    'username',
+    'modelName',
+    'family',
+    'trainingDataset',
+    'isTrainable',
+    'rocketRepoUrl',
+    'originRepoUrl',
+    'description',
+    'blueprint'
+]
+
+# List of all the valid Rocket families
+LIST_ROCKET_FAMILIES = [
+    'image_object_detection',
+    'image_human_pose_estimation',
+    'image_classification',
+    'image_superresolution',
+    'image_style_transfer',
+    'image_segmentation',
+    'image_instance_segmentation'
+]
 
 # --- TAR ARCHIVE --- 
 def unpack_tar_to_rocket(tar_path: str, rocket_folder_name: str, folder_path: str, remove_after_unpack: bool = True):
@@ -84,7 +110,7 @@ def get_file_SHA1_hash(file_path: str):
 
     return hash
 
-# --- INFO CONVERSION ---
+# --- ROCKET INFO + CONVERSION ---
 def convert_slug_to_dict(rocket_slug: str, parsing_char: str = '/', version_type: str = 'label') -> dict:
     """Convert a Rocket slug to a dictionary.
     
@@ -162,3 +188,57 @@ def convert_dict_to_foldername(rocket_info: dict, separation_char: str = '_') ->
     rocket_folder_name = rocket_info['username'] + '_' + rocket_info['modelName'] + '_' + rocket_info['hash']
 
     return rocket_folder_name
+
+def import_rocket_info_from_rocket_folder(rocket_folder_path: str, metadata_json_filename: str = 'info.json'):
+    """ Import the metadata information about a Rocket from its folder
+
+        Rocket's metadata information:
+
+    Args:
+        rocket_folder_path (str): path to the Rocket's folder
+        metadata_json_filename (str): name of the .json file containing the metadata information about the Rocket.
+    
+    Returns:
+        rocket_info (dict): dictionary containing all the Rocket metadata information. 
+    """
+    # Path to the file containing the information about the Rocket
+    metadata_json_path = os.path.join(rocket_folder_path, metadata_json_filename)
+
+    # Load the information from the .json file
+    with open(metadata_json_path) as info_json:
+        rocket_info = json.load(info_json)
+    
+    # -- INFO CHECK --
+    # Check if some fields are missing
+    missing_info = set(LIST_REQUIRED_INFO) - rocket_info.keys()
+
+    if missing_info:
+        raise rocketbase.exceptions.RocketNotEnoughInfo('Missing some information about the Rocket in the file: ' + metadata_json_path + '. Missing the following information: ' + ', '.join(missing_info))
+
+    # Check if some info are empty
+    list_empty_info = [key for key, item in rocket_info.items() if not type(item) is bool and not item and key in LIST_REQUIRED_INFO]
+
+    if list_empty_info:
+        raise rocketbase.exceptions.RocketNotEnoughInfo('Missing some information about the Rocket in the file: ' + metadata_json_path + '. Please provide more information for the following field(s): ' + ', '.join(list_empty_info))
+
+    # Check if the username contains a '_'
+    if '_' in rocket_info['username']:
+        raise rocketbase.exceptions.RocketInfoFormat('In the file \'{}\', the username \'{}\' is not valid. It can\'t contains a \'_\'.'.format(metadata_json_path, rocket_info['username']))
+
+    # Check if the modelName contains a '_'
+    if '_' in rocket_info['modelName']:
+        raise rocketbase.exceptions.RocketInfoFormat('In the file \'{}\', the modelName \'{}\' is not valid. It can\'t contains a \'_\'.'.format(metadata_json_path, rocket_info['modelName']))
+    
+    # Check if the rocket family is in the list of valid families
+    if not rocket_info['family'] in LIST_ROCKET_FAMILIES:
+        raise rocketbase.exceptions.RocketInfoFormat('In the file \'{}\', the family \'{}\' is not valid. Please refer to the documentation for a list of valid family names.'.format(metadata_json_path, rocket_info['family']))
+
+    # Check if isTrainable is a boolean
+    if not type(rocket_info['isTrainable']) is bool:
+        raise rocketbase.exceptions.RocketInfoFormat('In the file \'{}\',the field isTrainable needs to be a Boolean'.format(metadata_json_path))
+
+    # Check if blueprint is a list
+    if not type(rocket_info['blueprint']) is list:
+        raise rocketbase.exceptions.RocketInfoFormat('In the file \'{}\',the field blueprint needs to be a list of filenames.'.format(metadata_json_path))
+    
+    return rocket_info
