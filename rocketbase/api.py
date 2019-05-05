@@ -126,7 +126,7 @@ class RocketAPI:
         # Set the Google Cloud Storage Client to upload the Rocket
         self.set_google_cloud_storage_client()
 
-        #
+        # Get the blob to upload the Rocket to
         blob = self.bucket.blob(destination_blob_name)
 
         # Uploading the file to the Cloud Storage for Rockets
