@@ -9,6 +9,17 @@ class RocketNotEnoughInfo(Exception):
 
         pass
 
+class RocketInfoFormat(Exception):
+    """ 
+    Exception raised when the format of a Rocket's information is not conform.
+    """
+    def __init__(self, message, errors = None):
+
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+
+        pass
+
 class RocketAPIError(Exception):
     """ 
     Exception raised when the RocketAPI is returning an error code.
