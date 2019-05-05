@@ -1,7 +1,7 @@
 rockets/
 __pycache__/
 dist
-rockethub.egg-info
+rocketbase.egg-info
 build
 *.pyc
 *.ipynb
