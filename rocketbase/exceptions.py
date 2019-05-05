@@ -52,3 +52,14 @@ class RocketHashNotValid(Exception):
         super().__init__(message)
 
         pass
+
+class CloudStorageCredentials(Exception):
+    """
+    Exception raised when the retrieval of the credentials for the Cloud Storage failed
+    """
+    def __init__(self, message, errors = None):
+
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+
+        pass

@@ -24,36 +24,6 @@ class RocketAPI:
         self.initialized = False
         self._chunk_size = 512 * 1024
 
-    def get_service_credentials(self):
-        """ Fetch Service Credentials to allow Rocket launch
-
-        """
-        res = requests.get(self.credentials_api_url)
-        if res.status_code == 200:
-            with open("gcredentials.json", 'w') as credentials_handle:
-                credentials_handle.write(json.dumps((res.json())))
-                credentials_handle.close()
-                # Try to connect to Google Cloud Storage
-                try:
-                    self.storage_client = storage.Client.from_service_account_json("gcredentials.json")
-                except Exception as e:
-                    raise e
-
-                self._transport = AuthorizedSession(
-                    credentials=self.storage_client._credentials
-                )
-
-                # Try to connect to bucket
-                try:
-                    self.bucket = self.storage_client.bucket(self.bucket_name)
-                except google.cloud.exceptions.NotFound:
-                    print("Sorry, that bucket was not found")
-                except Exception as e:
-                    raise e
-                self.initialized = True
-                os.remove("gcredentials.json")
-
-
     def get_rocket_info(self, rocket_info: dict):
         """ Get the information about the best Rocket in the API
 
@@ -93,80 +63,75 @@ class RocketAPI:
         
         return models
 
-    def get_rocket_url(self, rocket_author: str, rocket_name: str, rocket_version: str):
-        """ Get the url from which to download the Rocket.
+    def set_google_cloud_storage_client(self):
+        """ Set the Google Cloud Storage Client using the service credentials.
 
-        Args:
-            rocket_author (str): Username of the author of the Rocket
-            rocket_name (str): Name of the rocket 
-            rocket_version (str): Version of the Rocket
+        In order to set the Google Cloud Storage Client that will allow us to upload files to the Google Cloud Storage we will first need to download the service credentials and then use them to create the Cloud Client.
+
         """
-        return self.selected_model['modelFilePath']
-    
-    def get_rocket_folder(self, rocket_author: str, rocket_name: str, rocket_version: str):
-        """ Get the name of the folder where the Rocket is unpacked.
+        try:
+            res = requests.get(self.credentials_api_url)
+        except requests.exceptions.RequestException as e:  # Catch all the Exceptions relative to the request
+            print('Problem retrieving the Cloud Storage Credentials:', e)
+        else:
+            # Raise exception if the retrieval of the credentials failed
+            if not res.status_code == 200:
+                raise rocketbase.exceptions.CloudStorageCredentials("Retrieving the Cloud Storage Credentials failed: {} \n\n Response message:\n {}".format(res.status_code, res.text))
+            
+            # Save the credentials on the disk
+            with open("gcredentials.json", 'w') as credentials_handle:
+                credentials_handle.write(json.dumps((res.json())))
+                credentials_handle.close()
+            
+            # Try to connect to Google Cloud Storage
+            try:
+                self.storage_client = storage.Client.from_service_account_json("gcredentials.json")
+            except Exception as e:
+                raise e
 
-        Args:
-            rocket_author (str): Username of the author of the Rocket
-            rocket_name (str): Name of the rocket 
-            rocket_version (str): Version of the Rocket
-        """
-        return self.selected_model['folderName']
-    
-    def get_rocket_last_version(self, rocket_author: str, rocket_name: str):
-        """Get the last version of a Rocket.
+            self._transport = AuthorizedSession(
+                credentials=self.storage_client._credentials
+            )
 
-        Args:
-            rocket_author (str): Username of the author of the Rocket
-            rocket_name (str): Name of the rocket 
-        """
-        # Verify the rocket exist
-        assert rocket_author in self.hangar.keys(), rocket_author + ' can\'t be found as an author.'
-        assert rocket_name in self.hangar[rocket_author].keys(), rocket_name + ' can\'t be found as a rocket from ' + rocket_author
+            # Try to connect to bucket
+            try:
+                self.bucket = self.storage_client.bucket(self.bucket_name)
+            except google.cloud.exceptions.NotFound:
+                print("Sorry, that bucket was not found")
+            except Exception as e:
+                raise e
+            
+            # If the initialization of the Cloud Storage Client was a success
+            self.initialized = True
 
-        # Get list of versions for a specific Rockets
-        list_versions = [v[1:] for v in self.hangar[rocket_author][rocket_name].keys() if v.startswith('v')]
-
-        mainVersion = 0
-        minorVersion = 'a'
-
-        for version in list_versions:
-            v = ["".join(x) for _, x in itertools.groupby(version, key=str.isdigit)]
-            temp_mainVersion = int(v[0])
-            temp_minorVersion = v[1]
-
-            assert len(temp_minorVersion) == 1, 'Automatic selection of the newest version doesn\'t support minor version made of more than 1 char.' 
-
-            if temp_mainVersion == mainVersion:
-                if temp_minorVersion > minorVersion:
-                    minorVersion = temp_minorVersion
-            elif temp_mainVersion > mainVersion:
-                mainVersion = temp_mainVersion
-                minorVersion = 'a'
-                if temp_minorVersion > minorVersion:
-                    minorVersion = temp_minorVersion
-        
-        return 'v' + str(mainVersion) +  minorVersion
-
+            # Remove the credentials from the disk
+            os.remove("gcredentials.json")
 
     def push_file_to_rocket_storage(self, source_file_name: str, destination_blob_name: str):
-        """Push the latest version of a Rocket to the Cloud Storage
+        """Push file to the Cloud Storage for Rockets.
 
         Args:
-            source_filename (str): Name/Path of the file to upload to Cloud Storage
+            source_filename (str): Name/Path of the file to upload to the Cloud Storage for Rockets.
             destination_blob_name (str): Name of the blob 
-            chunk_size (int): Size of Chunk to be uploaded
-        """
-        self.get_service_credentials()
 
+        Returns:
+            downloadUrl (str): Direct URL to download the upload file.
+        """
+        # 
+        self.set_google_cloud_storage_client()
+
+        #
         blob = self.bucket.blob(destination_blob_name)
 
-        print("Please wait.")
-
+        # Uploading the file to the Cloud Storage for Rockets
+        print("Please wait, your Rocket is leaving the atmosphere...")
         with open(source_file_name, 'rb') as f:
             blob.upload_from_file(f)
 
-        return blob.public_url
+        # Get the url to newly uploaded file
+        downloadUrl = blob.public_url
+
+        return downloadUrl
 
     def push_rocket(self, 
                     rocket_username: str, 
