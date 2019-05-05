@@ -12,27 +12,8 @@ from datetime import datetime
 from tqdm import tqdm
 
 import rocketbase.api
+import rocketbase.utils
 from rocketbase.exceptions import *
-
-
-def unpack_tar_to_rocket(tar_path: str, rocket_folder_name: str, folder_path: str, remove_after_unpack: bool = True):
-    """Unpack a TAR archive to a Rocket folder
-
-    Unpack a TAR archive in a specific folder, rename it and then remove the tar file (or not if the user wants to)
-
-    """
-    with tarfile.open(tar_path, 'r') as t:
-        tar_folder_name = os.path.commonprefix(t.getnames())
-        t.extractall(folder_path) # unpack in the wrong folder
-
-    # Should rename the folder once it is unpacked
-    rocket_folder_path = os.path.join(folder_path, rocket_folder_name)
-    os.rename(os.path.join(folder_path, tar_folder_name), rocket_folder_path)
-
-    if remove_after_unpack:
-        os.remove(tar_path)
-
-    return rocket_folder_path
 
 def pack_rocket_to_tar(path: str, rocket_folder: str, blueprint: list):
     """Packs a Rocket into a TAR archive
@@ -189,8 +170,6 @@ def convert_slug_to_dict(rocket_slug: str, parsing_char: str = '/', version_type
 
     return rocket_info
 
-
-
 class Rocket:
 
     @staticmethod
@@ -275,7 +254,9 @@ class Rocket:
                 
                 if display_loading: pbar.close()
                 
-                rocket_folder_path = unpack_tar_to_rocket(path_to_landing_rocket, rocket_folder_name, FOLDER_PATH)
+                # Unpack the downloaded tar file to a Rocket
+                rocket_folder_path = rocketbase.utils.unpack_tar_to_rocket(path_to_landing_rocket, rocket_folder_name, FOLDER_PATH, remove_after_unpack = True)
+
                 print('It is a success! The Rocket has landed!')
 
         else:
