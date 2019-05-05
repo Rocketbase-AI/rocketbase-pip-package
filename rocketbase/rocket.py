@@ -82,9 +82,7 @@ class Rocket:
                 print('Rocket approaching...')
                 h = requests.head(rocket_info_api['downloadUrl'], allow_redirects=True)
                 headers = h.headers
-                content_type = headers.get('content-type')
                 content_length = int(headers.get('content-length', None))
-                # print('content-type', content_type)
 
                 response = requests.get(rocket_info_api['downloadUrl'], stream=True)
             
@@ -98,7 +96,7 @@ class Rocket:
                 if display_loading: pbar.close()
                 
                 # Unpack the downloaded tar file to a Rocket
-                rocket_folder_path = rocketbase.utils.unpack_tar_to_rocket(path_to_landing_rocket, rocket_folder_name, FOLDER_PATH, remove_after_unpack = True)
+                _ = rocketbase.utils.unpack_tar_to_rocket(path_to_landing_rocket, rocket_folder_name, FOLDER_PATH, remove_after_unpack = True)
 
                 print('It is a success! The Rocket has landed!')
 
