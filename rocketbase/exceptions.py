@@ -8,8 +8,6 @@ class RocketNotEnoughInfo(Exception):
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
 
-        pass
-
 
 class RocketInfoFormat(Exception):
     """
@@ -20,8 +18,6 @@ class RocketInfoFormat(Exception):
 
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
-
-        pass
 
 
 class RocketAPIError(Exception):
@@ -34,8 +30,6 @@ class RocketAPIError(Exception):
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
 
-        pass
-
 
 class RocketNotFound(Exception):
     """
@@ -46,8 +40,6 @@ class RocketNotFound(Exception):
 
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
-
-        pass
 
 
 class RocketHashNotValid(Exception):
@@ -60,8 +52,6 @@ class RocketHashNotValid(Exception):
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
 
-        pass
-
 
 class CloudStorageCredentials(Exception):
     """
@@ -72,5 +62,3 @@ class CloudStorageCredentials(Exception):
 
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
-
-        pass

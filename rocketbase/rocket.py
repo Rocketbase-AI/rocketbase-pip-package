@@ -227,8 +227,5 @@ class Rocket:
         except rocketbase.exceptions.RocketNotEnoughInfo as e:
             print('Not enough Information to upload the Rocket', e)
             launched_rocket_slug = ''
-        except Exception as e:
-            print(e)
-            launched_rocket_slug = ''
 
         return launched_rocket_slug
