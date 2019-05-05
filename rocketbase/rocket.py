@@ -13,7 +13,7 @@ import rocketbase.exceptions
 class Rocket:
 
     @staticmethod
-    def land(rocket_slug: str, display_loading=True):
+    def land(rocket_slug: str, display_loading: bool=True):
         """ Download or check that the Rocket is ready locally
 
         Download the Rocket if it is not yet locally here.
@@ -31,7 +31,7 @@ class Rocket:
             model (nn.Module): Rocket containing the PyTorch model and the pre/post process model.
 
         Raises:
-            RocketNotFound: If the Rocket is not found either throught the API or locally.
+            RocketNotFound: If the Rocket is not found either through the API or locally.
             RocketNotEnoughInfo: If not enough information is provided to load the correct Rocket.
 
         """
@@ -160,9 +160,9 @@ class Rocket:
 
     @staticmethod
     def launch(rocket_slug: str):
-        """ Upload the latest Rocket that is ready localy
+        """ Upload the latest Rocket that is ready locally
 
-        Upload the latest version of the Rocket that is localy available
+        Upload the latest version of the Rocket that is locally available
 
         Args:
             rocket_slug (str): Rocket slug (<username>/<modelName>/<hash>). The <hash> is not optional.
