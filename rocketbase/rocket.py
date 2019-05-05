@@ -175,6 +175,9 @@ class Rocket:
         print("Let's get the new version name...")
         # Get new rocket hash
         new_rocket_hash = rocketbase.utils.get_file_SHA1_hash(path_to_rocket_ready_to_launch)
+
+        # Add the hash of the Rocket to the info about the Rocket
+        rocket_info_local['hash'] = new_rocket_hash
         
         print("Rocket ready to launch!")
 
@@ -182,18 +185,7 @@ class Rocket:
         api = rocketbase.api.RocketAPI()
         # Launch Rocket
         try:
-            launch_success = api.push_rocket(
-                rocket_username =rocket_info_local['username'],
-                rocket_modelName =rocket_info_local['modelName'],
-                rocket_hash =new_rocket_hash,
-                rocket_family = rocket_info_local['family'],
-                trainingDataset = rocket_info_local['trainingDataset'],
-                isTrainable = rocket_info_local['isTrainable'],
-                rocketRepoUrl = rocket_info_local['rocketRepoUrl'], 
-                paperUrl = rocket_info_local['paperUrl'],
-                originRepoUrl = rocket_info_local['originRepoUrl'],
-                description = rocket_info_local['description'],
-                tar_file=path_to_rocket_ready_to_launch)
+            launch_success = api.push_rocket(rocket_info_local, path_to_rocket_ready_to_launch)
             
             print('Rocket reached its destination.')
 
@@ -202,6 +194,12 @@ class Rocket:
             launch_success = False
         except rocketbase.exceptions.RocketAPIError as e:
             print('API Error:', e)
+            launch_success = False
+        except rocketbase.exceptions.RocketNotEnoughInfo as e:
+            print('Not enough Information to upload the Rocket', e)
+            launch_success = False
+        except Exception as e:
+            print(e)
             launch_success = False
         
         return launch_success

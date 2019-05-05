@@ -71,7 +71,7 @@ class RocketAPI:
         Raises:
             RequestException: If the request to get the credentials failed in the process.
             CloudStorageCredentials: If the request to get the credentials finished but was not successful.
-            CloudStorageRelatedExceptions: If the creation of the Google Cloud Storage Client failed. It can be a lot of different ones.
+            Other Exceptions: If the creation of the Google Cloud Storage Client failed. It can be a lot of different ones.
 
         """
         try:
@@ -139,57 +139,65 @@ class RocketAPI:
 
         return downloadUrl
 
-    def push_rocket(self, 
-                    rocket_username: str, 
-                    rocket_modelName: str, 
-                    rocket_hash: str, 
-                    rocket_family:str, 
-                    trainingDataset: str,
-                    isTrainable: bool,
-                    rocketRepoUrl: str,
-                    paperUrl: str,
-                    originRepoUrl:str,
-                    description: str,
-                    tar_file: str):
-        """Push the latest version of a Rocket to the cloud
+    def push_rocket(self, rocket_info: dict, rocket_tar_file_path: str):
+        """Push the tar archive of a Rocket to the cloud
+
+        This function first upload the tar archive to the Google Cloud Storage before adding a new entry to the Rocketbase database.
 
         Args:
-            rocket_username (str): Author of the new Rocket
-            rocket_modelName (str): Name of the Model contained in the Rocket
-            rocket_hash (str): Version hash of the Rocket
-            rocket_family (str): Rocket family this Rocket belongs to
-            trainingDataset (str): Dataset name this Rocket was trained on
-            isTrainable (str): Flag to indicate whether this Rocket has necessary components for training
-            rocketRepoUrl (str): URL of the repository of the Rocket code
-            paperUrl (str): URL of the original research publication
-            originRepoUrl (str): URL of the original repository of the model
-            description (str): Short description of the Rocket and its details
-            tar_file (str): Path to the TAR archive of the Rocket
+            rocket_info (dict): Dictionary containing all the information needed to add a Rocket to the Rocketbase Database. A list of all those information is available in the documentation.
+            rocket_tar_file_path (str): Path to the TAR archive of the Rocket
+        
+        Returns:
+            is_Successful (bool): Returns True if the Rocket was upload without any problem to the Google Cloud Storage and all of its information added to the Database. Otherwise, it returns False.
+        
+        Raises:
+            RocketNotEnoughInfo: If the construction of the payload to add the Rocket to the database fails.
+            RequestException: If the request to add the Rocket to the database fails.
+            RocketAPIError: If the request to add the Rocket to the database finished but the status code is different from 201.
+            Other Exceptions: Other exceptions when pushing the Rocket to the Google Cloud Storage.
         """
-        # Push Rocket to Cloud Storage
-        storage_file_path = self.push_file_to_rocket_storage(
-                                                source_file_name=tar_file,
-                                                destination_blob_name=(rocket_username+'_'+rocket_modelName+'_'+rocket_hash+'.tar')) 
+        # Push the Rocket to Cloud Storage
+        try:
+            storage_file_path = self.push_file_to_rocket_storage(
+                                                    source_file_name=rocket_tar_file_path,
+                                                    destination_blob_name=(rocket_info['username']+'_'+rocket_info['modelName']+'_'+rocket_info['hash']+'.tar'))
+        except Exception as e:
+            print('Problem uploading the Tar archive to the Google Cloud Storage.')
+            raise e
 
-        payload = ({
-            'modelName': rocket_modelName,
-            'username': rocket_username,
-            'family': rocket_family,
-            'trainingDataset': trainingDataset,
-            'isTrainable': isTrainable,
-            'rocketRepoUrl': rocketRepoUrl,
-            'paperUrl': paperUrl,
-            'originRepoUrl': originRepoUrl,
-            'description': description,
-            'hash': rocket_hash,
-            'downloadUrl': storage_file_path,
-        })
+        # Gather all the information needed to upload a Rocket
+        try:
+            payload = ({
+                'modelName': rocket_info['modelName'],
+                'username': rocket_info['username'],
+                'family': rocket_info['family'],
+                'trainingDataset': rocket_info['trainingDataset'],
+                'isTrainable': rocket_info['isTrainable'],
+                'rocketRepoUrl': rocket_info['rocketRepoUrl'],
+                'paperUrl': rocket_info['paperUrl'],
+                'originRepoUrl': rocket_info['originRepoUrl'],
+                'description': rocket_info['description'],
+                'hash': rocket_info['hash'],
+                'downloadUrl': storage_file_path,
+            })
+        except Exception as e:
+            print(e)
+            raise rocketbase.exceptions.RocketNotEnoughInfo('There was a problem gathering all the information needed to upload a Rocket.')
 
-        headers = {'Content-type': 'application/json'}
+        # Adding the information about the new Rocket to the Database
+        try:
+            headers = {'Content-type': 'application/json'}
 
-        res = requests.post(self.push_url, json = payload, headers=headers)
+            res = requests.post(self.push_url, json = payload, headers=headers)
+
+        except requests.exceptions.RequestException as e:  # Catch all the Exceptions relative to the request
+            print('Problem adding the Rocket to the RocketBase Database.')
+            raise e
 
         if not res.status_code == 201:
             raise rocketbase.exceptions.RocketAPIError("Push Rocket Update has failed! Status code : {} \n\n Response message:\n {}".format(res.status_code, res.text))
         
-        return res.status_code == 201
+        is_Successful = res.status_code == 201
+
+        return is_Successful
