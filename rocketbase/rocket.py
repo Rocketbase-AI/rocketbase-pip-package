@@ -126,7 +126,7 @@ class Rocket:
 
             if not list_rocket_info_local:
                 raise rocketbase.exceptions.RocketNotFound(
-                    'No Rocket found locally using the slug: ' + rocket_slug)
+                    'No Rocket found online and locally using the slug: \'{}\'. Please check the documentation online to see what are the Rockets available.'.format(rocket_slug))
 
             if 'label' in rocket_info_user.keys():
                 rocket_info_local = [
