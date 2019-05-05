@@ -1,5 +1,3 @@
-import io
-import itertools
 import json
 import os
 import requests
@@ -9,20 +7,18 @@ import rocketbase.exceptions
 import google
 from google.auth.transport.requests import AuthorizedSession
 from google.cloud import storage
-from google.resumable_media import requests as gRequests
-from google.resumable_media import common
+
 
 class RocketAPI:
     def __init__(self):
-        self.models = []
-        self.selected_model = {}
         self.credentials_api_url = "https://europe-west1-rockethub.cloudfunctions.net/getUploadCredentials?token=blah"
         self.models_api_url = "https://europe-west1-rockethub.cloudfunctions.net/getAvailableModels"
         self.push_url = "https://europe-west1-rockethub.cloudfunctions.net/saveNewModel"
         self.bucket_name = "rockets-hangar"
-        self.project_id = "rockethub"
         self.initialized = False
-        self._chunk_size = 512 * 1024
+        self.bucket = None
+        self.storage_client = None
+        self._transport = None
 
     def get_rocket_info(self, rocket_info: dict):
         """ Get the information about the best Rocket in the API
@@ -35,32 +31,42 @@ class RocketAPI:
         """
         # Check that at least the builder and the name of the Rocket are in the Rocket info
         if not set(['username', 'modelName']).issubset(rocket_info.keys()):
-            raise rocketbase.exceptions.RocketNotEnoughInfo('Please specify the username and the modelName of the Rocket you want to get.')
+            raise rocketbase.exceptions.RocketNotEnoughInfo(
+                'Please specify the username and the modelName of the Rocket you want to get.')
 
-        payload = {'username': rocket_info['username'], 'modelName': rocket_info['modelName']}
+        payload = {
+            'username': rocket_info['username'],
+            'modelName': rocket_info['modelName']
+            }
 
         if 'label' in rocket_info.keys():
             payload['label'] = rocket_info['label']
-        
-        printable_rocket_name = '\'' + payload['modelName'] + '\'(' +  payload['label'] + ')' if 'label' in payload.keys() else '\'' + payload['modelName']+ '\''
-        
-        print('Looking for the Rocket ' + printable_rocket_name + ' made by \'' + payload['username'] + '\'...')
+
+        printable_rocket_name = '\'' + \
+            payload['modelName'] + '\'(' + payload['label'] + ')' if 'label' in payload.keys(
+            ) else '\'' + payload['modelName'] + '\''
+
+        print('Looking for the Rocket ' + printable_rocket_name +
+              ' made by \'' + payload['username'] + '\'...')
 
         # Make the request (exceptions are catched outside)
         res = requests.get(self.models_api_url, params=payload)
 
         # if status != 200 then database is broken
         if not res.status_code == 200:
-            raise rocketbase.exceptions.RocketAPIError('Database error. Please try again later. error({})'.format(res.status_code))
+            raise rocketbase.exceptions.RocketAPIError(
+                'Database error. Please try again later. error({})'.format(res.status_code))
 
         models = res.json()
 
         # Test that the rocket exists
         if not models:
-            raise rocketbase.exceptions.RocketNotFound('Rocket cannot be found in our database. Please check the spelling. ' + rocket_info['username'] + '/' + rocket_info['modelName'])
-       
-        print('{models_len} model versions found from the database.'.format(models_len=len(models)))
-        
+            raise rocketbase.exceptions.RocketNotFound(
+                'Rocket cannot be found in our database. Please check the spelling. ' + rocket_info['username'] + '/' + rocket_info['modelName'])
+
+        print('{models_len} model versions found from the database.'.format(
+            models_len=len(models)))
+
         return models
 
     def set_google_cloud_storage_client(self):
@@ -82,16 +88,18 @@ class RocketAPI:
         else:
             # Raise exception if the retrieval of the credentials failed
             if not res.status_code == 200:
-                raise rocketbase.exceptions.CloudStorageCredentials("Retrieving the Cloud Storage Credentials failed: {} \n\n Response message:\n {}".format(res.status_code, res.text))
-            
+                raise rocketbase.exceptions.CloudStorageCredentials(
+                    "Retrieving the Cloud Storage Credentials failed: {} \n\n Response message:\n {}".format(res.status_code, res.text))
+
             # Save the credentials on the disk
             with open("gcredentials.json", 'w') as credentials_handle:
                 credentials_handle.write(json.dumps((res.json())))
                 credentials_handle.close()
-            
+
             # Try to connect to Google Cloud Storage
             try:
-                self.storage_client = storage.Client.from_service_account_json("gcredentials.json")
+                self.storage_client = storage.Client.from_service_account_json(
+                    "gcredentials.json")
             except Exception as e:
                 raise e
 
@@ -106,7 +114,7 @@ class RocketAPI:
                 print("Sorry, that bucket was not found")
             except Exception as e:
                 raise e
-            
+
             # If the initialization of the Cloud Storage Client was a success
             self.initialized = True
 
@@ -118,7 +126,7 @@ class RocketAPI:
 
         Args:
             source_filename (str): Name/Path of the file to upload to the Cloud Storage for Rockets.
-            destination_blob_name (str): Name of the blob 
+            destination_blob_name (str): Name of the blob
 
         Returns:
             downloadUrl (str): Direct URL to download the upload file.
@@ -147,10 +155,10 @@ class RocketAPI:
         Args:
             rocket_info (dict): Dictionary containing all the information needed to add a Rocket to the Rocketbase Database. A list of all those information is available in the documentation.
             rocket_tar_file_path (str): Path to the TAR archive of the Rocket
-        
+
         Returns:
             rocket_slug (str): Returns the slug of the Rocket successfully uploaded.
-        
+
         Raises:
             RocketNotEnoughInfo: If the construction of the payload to add the Rocket to the database fails.
             RequestException: If the request to add the Rocket to the database fails.
@@ -160,8 +168,8 @@ class RocketAPI:
         # Push the Rocket to Cloud Storage
         try:
             storage_file_path = self.push_file_to_rocket_storage(
-                                                    source_file_name=rocket_tar_file_path,
-                                                    destination_blob_name=(rocket_info['username']+'_'+rocket_info['modelName']+'_'+rocket_info['hash']+'.tar'))
+                source_file_name=rocket_tar_file_path,
+                destination_blob_name=(rocket_info['username']+'_'+rocket_info['modelName']+'_'+rocket_info['hash']+'.tar'))
         except Exception as e:
             print('Problem uploading the Tar archive to the Google Cloud Storage.')
             raise e
@@ -183,21 +191,24 @@ class RocketAPI:
             })
         except Exception as e:
             print(e)
-            raise rocketbase.exceptions.RocketNotEnoughInfo('There was a problem gathering all the information needed to upload a Rocket.')
+            raise rocketbase.exceptions.RocketNotEnoughInfo(
+                'There was a problem gathering all the information needed to upload a Rocket.')
 
         # Adding the information about the new Rocket to the Database
         try:
             headers = {'Content-type': 'application/json'}
 
-            res = requests.post(self.push_url, json = payload, headers=headers)
+            res = requests.post(self.push_url, json=payload, headers=headers)
 
         except requests.exceptions.RequestException as e:  # Catch all the Exceptions relative to the request
             print('Problem adding the Rocket to the RocketBase Database.')
             raise e
 
         if not res.status_code == 201:
-            raise rocketbase.exceptions.RocketAPIError("Push Rocket Update has failed! Status code : {} \n\n Response message:\n {}".format(res.status_code, res.text))
-        
-        rocket_slug = rocket_info['username']+'/'+rocket_info['modelName']+'/'+rocket_info['hash']
+            raise rocketbase.exceptions.RocketAPIError(
+                "Push Rocket Update has failed! Status code : {} \n\n Response message:\n {}".format(res.status_code, res.text))
+
+        rocket_slug = rocket_info['username']+'/' + \
+            rocket_info['modelName']+'/'+rocket_info['hash']
 
         return rocket_slug
