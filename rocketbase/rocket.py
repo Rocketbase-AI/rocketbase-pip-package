@@ -146,7 +146,7 @@ class Rocket:
             rocket_slug (str): Rocket slug (<username>/<modelName>/<hash>). The <hash> is not optional.
         
         Returns:
-            launch_success (bool): true is the launch was successful, false in the other case.
+            launched_rocket_slug (str): slug of the successfully uploaded Rocket. If the upload failed then it returns an empty string.
         
         Raises:
             RocketNotEnoughInfo: If the <hash> of the Rocket to upload is not given in the rocket_slug
@@ -185,21 +185,21 @@ class Rocket:
         api = rocketbase.api.RocketAPI()
         # Launch Rocket
         try:
-            launch_success = api.push_rocket(rocket_info_local, path_to_rocket_ready_to_launch)
+            launched_rocket_slug = api.push_rocket(rocket_info_local, path_to_rocket_ready_to_launch)
             
             print('Rocket reached its destination.')
 
         except requests.exceptions.RequestException as e:  # Catch all the Exceptions relative to the request
             print('Problem with the request:', e)
-            launch_success = False
+            launched_rocket_slug = ''
         except rocketbase.exceptions.RocketAPIError as e:
             print('API Error:', e)
-            launch_success = False
+            launched_rocket_slug = ''
         except rocketbase.exceptions.RocketNotEnoughInfo as e:
             print('Not enough Information to upload the Rocket', e)
-            launch_success = False
+            launched_rocket_slug = ''
         except Exception as e:
             print(e)
-            launch_success = False
+            launched_rocket_slug = ''
         
-        return launch_success
+        return launched_rocket_slug

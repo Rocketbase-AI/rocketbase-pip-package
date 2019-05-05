@@ -149,7 +149,7 @@ class RocketAPI:
             rocket_tar_file_path (str): Path to the TAR archive of the Rocket
         
         Returns:
-            is_Successful (bool): Returns True if the Rocket was upload without any problem to the Google Cloud Storage and all of its information added to the Database. Otherwise, it returns False.
+            rocket_slug (str): Returns the slug of the Rocket successfully uploaded.
         
         Raises:
             RocketNotEnoughInfo: If the construction of the payload to add the Rocket to the database fails.
@@ -198,6 +198,6 @@ class RocketAPI:
         if not res.status_code == 201:
             raise rocketbase.exceptions.RocketAPIError("Push Rocket Update has failed! Status code : {} \n\n Response message:\n {}".format(res.status_code, res.text))
         
-        is_Successful = res.status_code == 201
+        rocket_slug = rocket_info['username']+'/'+rocket_info['modelName']+'/'+rocket_info['hash']
 
-        return is_Successful
+        return rocket_slug
