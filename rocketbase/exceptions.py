@@ -52,6 +52,15 @@ class RocketHashNotValid(Exception):
         # Call the base class constructor with the parameters it needs
         super().__init__(message)
 
+class RocketDeviceNotFound(Exception):
+    """
+    Exception raised when the device requested to run the Rocket doesn't exist.
+    """
+
+    def __init__(self, message, errors=None):
+
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
 
 class CloudStorageCredentials(Exception):
     """
