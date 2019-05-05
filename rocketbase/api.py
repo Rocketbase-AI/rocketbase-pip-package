@@ -218,6 +218,7 @@ class RocketAPI:
 
         res = requests.post(self.push_url, json = payload, headers=headers)
 
-        assert res.status_code == 201, "Push Rocket Update has failed! Status code : {} \n\n Response message:\n {}".format(res.status_code, res.text)
+        if not res.status_code == 201:
+            raise rocketbase.exceptions.RocketAPIError("Push Rocket Update has failed! Status code : {} \n\n Response message:\n {}".format(res.status_code, res.text))
         
         return res.status_code == 201
