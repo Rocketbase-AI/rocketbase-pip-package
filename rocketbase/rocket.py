@@ -181,23 +181,28 @@ class Rocket:
         return model
 
     @staticmethod
-    def launch(rocket: str, folder_path = "rockets"):
+    def launch(rocket_slug: str):
         """ Upload the latest Rocket that is ready localy
 
         Upload the latest version of the Rocket that is localy available
 
         Args:
-            rocket (str): Rocket Identifier (author/name/(version))
-            folder_path (str): folder where to find the Rocket
+            rocket_slug (str): Rocket slug (<username>/<modelName>/<hash>). The <hash> is not optional.
+        
+        Returns:
+            launch_success (bool): true is the launch was successful, false in the other case.
         """
+        # Define the folder path for the Rocket
+        FOLDER_PATH = 'rockets'
+
         # Get Rocket information
-        rocket_username, rocket_modelName, rocket_hash = read_slug(rocket)
+        rocket_username, rocket_modelName, rocket_hash = read_slug(rocket_slug)
 
         # Get path to Rocket
-        rocket_path = get_rocket_folder(rocket_slug=rocket)
+        rocket_path = get_rocket_folder(rocket_slug=rocket_slug)
 
         # Open info.json to verify information
-        with open(os.path.join(folder_path, rocket_path, 'info.json')) as metadata_file:
+        with open(os.path.join(FOLDER_PATH, rocket_path, 'info.json')) as metadata_file:
             metadata_dict = json.load(metadata_file)
             check_metadata(metadata_dict)
             assert str(metadata_dict['builder']) == str(rocket_username), "The Rocket author name does not match the information in info.json. {} vs {}".format(rocket_username, metadata_dict['builder'])
@@ -233,4 +238,5 @@ class Rocket:
         print('Rocket reached its destination.' if launch_success else "There was a problem with the launch")
         if launch_success:
             os.remove(path_to_launch_rocket)
+        
         return launch_success
