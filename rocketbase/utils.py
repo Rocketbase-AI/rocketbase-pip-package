@@ -140,3 +140,25 @@ def get_list_rocket_info_from_folder(folder_path: str) -> list:
     list_rocket_info = [convert_slug_to_dict(f, '_', 'hash') for f in list_folders]
 
     return list_rocket_info
+
+def convert_dict_to_foldername(rocket_info: dict, separation_char: str = '_') -> str:
+    """Convert a dict containing the information about a Rocket to a folder name.
+    
+    Args:
+        rocket_info (dict):  Dictionary containing the information about a Rocket.
+        separation_char (str): Character used to separate the information in the name of the folder.
+
+    Returns:
+        rocket_folder_name (str): Name of the folder containing the Rocket.
+
+    Raises:
+        RocketNotEnoughInfo: If there are not enough information to create the folder name
+    """
+    missing_info = set(['username', 'modelName', 'hash']) - rocket_info.keys()
+
+    if missing_info:
+        raise rocketbase.exceptions.RocketNotEnoughInfo('Missing the following information to create the Rocket\'s folder name: ' + ', '.join(missing_info))
+    
+    rocket_folder_name = rocket_info['username'] + '_' + rocket_info['modelName'] + '_' + rocket_info['hash']
+
+    return rocket_folder_name

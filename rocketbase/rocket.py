@@ -58,28 +58,6 @@ def check_metadata(data: dict):
     assert len(data['blueprint'])>0, "Please add elements to the blueprint in info.json"
     assert type(data['isTrainable']) is bool, "Please enter 'true' or 'false' for isTrainable in info.json"
 
-def convert_dict_to_foldername(rocket_info: dict, separation_char: str = '_') -> str:
-    """Convert a dict containing the information about a Rocket to a folder name.
-    
-    Args:
-        rocket_info (dict):  Dictionary containing the information about a Rocket.
-        separation_char (str): Character used to separate the information in the name of the folder.
-
-    Returns:
-        rocket_folder_name (str): Name of the folder containing the Rocket.
-
-    Raises:
-        RocketNotEnoughInfo: If there are not enough information to create the folder name
-    """
-    missing_info = set(['username', 'modelName', 'hash']) - rocket_info.keys()
-
-    if missing_info:
-        raise RocketNotEnoughInfo('Missing the following information to create the Rocket\'s folder name: ' + ', '.join(missing_info))
-    
-    rocket_folder_name = rocket_info['username'] + '_' + rocket_info['modelName'] + '_' + rocket_info['hash']
-
-    return rocket_folder_name
-
 class Rocket:
 
     @staticmethod
@@ -134,7 +112,7 @@ class Rocket:
         # If the API returned a Rocket
         if rocket_info_api:
             # Create the folder name
-            rocket_folder_name = convert_dict_to_foldername(rocket_info_api)
+            rocket_folder_name = rocketbase.utils.convert_dict_to_foldername(rocket_info_api)
 
             # Rocket already downloaded locally -- No need to download it
             if rocket_folder_name in os.listdir(FOLDER_PATH):
@@ -182,7 +160,7 @@ class Rocket:
                     rocket_info_local = [ri for ri in list_rocket_info_local if ri['hash'] == rocket_info_user['label']]
 
                     if rocket_info_local:
-                        rocket_folder_name = convert_dict_to_foldername(rocket_info_local[0])
+                        rocket_folder_name = rocketbase.utils.convert_dict_to_foldername(rocket_info_local[0])
                         print('Rocket found locally.')
                     else:
                          raise RocketNotFound('No Rocket found locally using the slug: {}'.format(rocket_slug))
@@ -191,7 +169,7 @@ class Rocket:
                     raise RocketNotEnoughInfo('There are multiple local versions of the Rocket \'' + rocket_slug + '\'. Please choose a specific version by providing the hash of the Rocket.')
                 
                 else:
-                    rocket_folder_name = convert_dict_to_foldername(list_rocket_info_local[0])
+                    rocket_folder_name = rocketbase.utils.convert_dict_to_foldername(list_rocket_info_local[0])
                     print('Rocket found locally.')
         
         print("Let's prepare the Rocket...")
