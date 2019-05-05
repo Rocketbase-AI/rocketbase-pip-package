@@ -2,6 +2,8 @@ import glob
 import os
 import tarfile
 
+import rocketbase.exceptions
+
 # --- TAR ARCHIVE --- 
 def unpack_tar_to_rocket(tar_path: str, rocket_folder_name: str, folder_path: str, remove_after_unpack: bool = True):
     """Unpack a tar archive to a Rocket folder
@@ -57,3 +59,26 @@ def pack_rocket_to_tar(folder_path: str, rocket_folder: str, blueprint: list):
                 tar_handle.add(filename)
 
     return tar_path
+
+def get_file_SHA1_hash(file_path: str):
+    """Compute SHA-1 Hash of a file
+
+    Args:
+        file_path (str): Path to the file we want to compute the hash from.
+    
+    Returns:
+        hash (str): SHA-1 hash of the referenced file.
+    
+    Raises:
+
+    """
+    LENGTH_SHA1_HASH = 40
+
+    with open(file_path, 'rb') as f:
+        buf = f.read()
+        hash = hashlib.sha1(buf).hexdigest()
+    
+    if len(hash) != LENGTH_SHA1_HASH:
+        raise rocketbase.exceptions.RocketHashNotValid('SHA-1 hash computation failed on file: {}'.format(file_path))
+
+    return hash

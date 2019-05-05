@@ -30,3 +30,14 @@ class RocketNotFound(Exception):
         super().__init__(message)
 
         pass
+
+class RocketHashNotValid(Exception):
+    """
+    Exception raised when the hash of a Rocket is not valid.
+    """
+    def __init__(self, message, errors = None):
+
+        # Call the base class constructor with the parameters it needs
+        super().__init__(message)
+
+        pass

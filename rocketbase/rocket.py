@@ -33,18 +33,6 @@ def get_rocket_folder(rocket_slug: str):
     print("Rocket folder is {}".format(rocket_folder_name))
     return rocket_folder_name
 
-def get_rocket_hash(rocket_path: str):
-    """Compute SHA-1 Hash of the Rocket TAR archive
-
-    Args:
-        rocket_path (str): Path to the TAR archive of the Rocket, not the Rocket folder
-    """
-    with open(rocket_path, 'rb') as f:
-        buf = f.read()
-        _hash = hashlib.sha1(buf).hexdigest()
-        assert len(_hash)>1, "Version hash computation failed"
-    return _hash
-
 def check_metadata(data: dict):
     """Verify the completness of the metadata provided in the info.json file
     """
@@ -308,7 +296,7 @@ class Rocket:
         
         print("Let's get the new version name...")
         # Get new rocket hash
-        new_rocket_hash = get_rocket_hash(path_to_launch_rocket)
+        new_rocket_hash = rocketbase.utils.get_file_SHA1_hash(path_to_launch_rocket)
         
         print("Rocket ready to launch!")
 
