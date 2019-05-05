@@ -1,4 +1,5 @@
 import glob
+import hashlib
 import os
 import tarfile
 
