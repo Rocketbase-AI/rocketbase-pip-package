@@ -162,7 +162,7 @@ class Rocket:
         print("Let's load everything into the Rocket...")
         
         # Pack folder into archive
-        path_to_rocket_ready_to_launch = rocketbase.utils.pack_rocket_to_tar(FOLDER_PATH, rocket_folder_name, blueprint=rocket_info['blueprint'])
+        path_to_rocket_ready_to_launch = rocketbase.utils.pack_rocket_to_tar(FOLDER_PATH, rocket_folder_name, blueprint=rocket_info_local['blueprint'])
         
         print("Let's get the new version name...")
         # Get new rocket hash
@@ -180,11 +180,11 @@ class Rocket:
                 rocket_hash =new_rocket_hash,
                 rocket_family = rocket_info_local['family'],
                 trainingDataset = rocket_info_local['trainingDataset'],
-                isTrainable = metadata_dict['isTrainable'],
-                rocketRepoUrl = metadata_dict['rocketRepoUrl'], 
-                paperUrl = metadata_dict['paperUrl'],
-                originRepoUrl = metadata_dict['originRepoUrl'],
-                description = metadata_dict['description'],
+                isTrainable = rocket_info_local['isTrainable'],
+                rocketRepoUrl = rocket_info_local['rocketRepoUrl'], 
+                paperUrl = rocket_info_local['paperUrl'],
+                originRepoUrl = rocket_info_local['originRepoUrl'],
+                description = rocket_info_local['description'],
                 tar_file=path_to_rocket_ready_to_launch)
             
             print('Rocket reached its destination.')
