@@ -13,7 +13,7 @@ import rocketbase.exceptions
 class Rocket:
 
     @staticmethod
-    def land(rocket_slug: str, display_loading: bool=True):
+    def land(rocket_slug: str, display_loading: bool = True):
         """ Download or check that the Rocket is ready locally
 
         Download the Rocket if it is not yet locally here.
