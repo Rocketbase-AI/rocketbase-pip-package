@@ -1,4 +1,3 @@
-import hashlib
 import importlib
 import json
 import os
@@ -58,12 +57,6 @@ def check_metadata(data: dict):
     assert len(data['description'])>1, "Please add a description¨of your rocket in info.json"
     assert len(data['blueprint'])>0, "Please add elements to the blueprint in info.json"
     assert type(data['isTrainable']) is bool, "Please enter 'true' or 'false' for isTrainable in info.json"
-
-def ensure_dir(dir_name: str):
-    """Creates folder if not exists.
-    """
-    if not os.path.exists(dir_name):
-        os.makedirs(dir_name)
 
 def get_list_rocket_info_from_folder(folder_path: str) -> list:
     """Get the list of rocket_info from folders name inside of a folder.
@@ -190,10 +183,9 @@ class Rocket:
             print('No Rocket found with the API using the slug:', rocket_slug)
             rocket_info_api = {}
 
-        # print(rocket_info_api)
-
         # Check if folder to download the rockets exists
-        ensure_dir(FOLDER_PATH)
+        if not os.path.exists(FOLDER_PATH):
+            os.makedirs(FOLDER_PATH)
 
         # If the API returned a Rocket
         if rocket_info_api:
