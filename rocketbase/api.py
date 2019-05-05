@@ -4,7 +4,7 @@ import json
 import os
 import requests
 
-from rocketbase.exceptions import *
+import rocketbase.exceptions
 
 import google
 from google.auth.transport.requests import AuthorizedSession
@@ -65,7 +65,7 @@ class RocketAPI:
         """
         # Check that at least the builder and the name of the Rocket are in the Rocket info
         if not set(['username', 'modelName']).issubset(rocket_info.keys()):
-            raise RocketNotEnoughInfo('Please specify the username and the modelName of the Rocket you want to get.')
+            raise rocketbase.exceptions.RocketNotEnoughInfo('Please specify the username and the modelName of the Rocket you want to get.')
 
         payload = {'username': rocket_info['username'], 'modelName': rocket_info['modelName']}
 
@@ -81,13 +81,13 @@ class RocketAPI:
 
         # if status != 200 then database is broken
         if not res.status_code == 200:
-            raise RocketAPIError('Database error. Please try again later. error({})'.format(res.status_code))
+            raise rocketbase.exceptions.RocketAPIError('Database error. Please try again later. error({})'.format(res.status_code))
 
         models = res.json()
 
         # Test that the rocket exists
         if not models:
-            raise RocketNotFound('Rocket cannot be found in our database. Please check the spelling. ' + rocket_info['username'] + '/' + rocket_info['modelName'])
+            raise rocketbase.exceptions.RocketNotFound('Rocket cannot be found in our database. Please check the spelling. ' + rocket_info['username'] + '/' + rocket_info['modelName'])
        
         print('{models_len} model versions found from the database.'.format(models_len=len(models)))
         
