@@ -159,16 +159,6 @@ class Rocket:
         rocket_folder_path = os.path.join(FOLDER_PATH, rocket_folder_name)
         rocket_info_local = rocketbase.utils.import_rocket_info_from_rocket_folder(rocket_folder_path)
 
-        # Verify that the information extracted from the foler corresponds to the information provided by the user
-        if not rocket_info_user['username'] == rocket_info_local['username']:
-            raise rocketbase.exceptions.RocketInfoFormat('In the folder \'{}\',the username \'{}\' doesn\'t correspond to the username provided in the rocket_slug \'{}\'.'.format(rocket_folder_name, rocket_info_local['username'], rocket_info_user['username']))
-        
-        if not rocket_info_user['modelName'] == rocket_info_local['modelName']:
-            raise rocketbase.exceptions.RocketInfoFormat('In the folder \'{}\',the modelName \'{}\' doesn\'t correspond to the modelName provided in the rocket_slug \'{}\'.'.format(rocket_folder_name, rocket_info_local['modelName'], rocket_info_user['modelName']))
-
-        if not rocket_info_user['hash'] == rocket_info_local['hash']:
-            raise rocketbase.exceptions.RocketInfoFormat('In the folder \'{}\',the hash \'{}\' doesn\'t correspond to the hash provided in the rocket_slug \'{}\'.'.format(rocket_folder_name, rocket_info_local['hash'], rocket_info_user['hash']))
-
         print("Let's load everything into the Rocket...")
         
         # Pack folder into archive
