@@ -30,8 +30,8 @@ class Rocket:
             model (nn.Module): Rocket containing the PyTorch model and the pre/post process model.
 
         Raises:
-            RocketNotFound is raised if the Rocket is not found either throught the API or locally.
-            RocketNotEnoughInfo is raised if not enough information is provided to load the correct Rocket.
+            RocketNotFound: If the Rocket is not found either throught the API or locally.
+            RocketNotEnoughInfo: If not enough information is provided to load the correct Rocket.
 
         """
         # Define the chunk size for the download
@@ -149,7 +149,7 @@ class Rocket:
             launch_success (bool): true is the launch was successful, false in the other case.
         
         Raises:
-            RocketNotEnoughInfo is raised if the <hash> of the Rocket to upload is not given in the rocket_slug
+            RocketNotEnoughInfo: If the <hash> of the Rocket to upload is not given in the rocket_slug
         """
         # Define the folder path for the Rocket
         FOLDER_PATH = 'rockets'
