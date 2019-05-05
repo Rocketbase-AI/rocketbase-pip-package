@@ -2,4 +2,4 @@ test:pylint:
     image: python:3.6
     script:
         - pip install pylint --quiet
-        - pylint *.py
+        - pylint rocketbase/*.py
