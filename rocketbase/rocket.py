@@ -58,21 +58,6 @@ def check_metadata(data: dict):
     assert len(data['blueprint'])>0, "Please add elements to the blueprint in info.json"
     assert type(data['isTrainable']) is bool, "Please enter 'true' or 'false' for isTrainable in info.json"
 
-def get_list_rocket_info_from_folder(folder_path: str) -> list:
-    """Get the list of rocket_info from folders name inside of a folder.
-    
-    Args:
-        folder_path (str): Path to the folder containing the folders of the Rockets.
-
-    Returns:
-        list_rocket_info (list): List of rocket_info of the all the folders of the Rockets in folder_path. 
-    """
-    list_folders = [f for f in os.listdir(folder_path) if not f.startswith('.') and f.count('_') >= 2]
-
-    list_rocket_info = [convert_slug_to_dict(f, '_', 'hash') for f in list_folders]
-
-    return list_rocket_info
-
 def convert_dict_to_foldername(rocket_info: dict, separation_char: str = '_') -> str:
     """Convert a dict containing the information about a Rocket to a folder name.
     
@@ -185,7 +170,7 @@ class Rocket:
 
         else:
             # Get all the rocket_info from the Rockets in the folder
-            list_rocket_info_local = get_list_rocket_info_from_folder(FOLDER_PATH)
+            list_rocket_info_local = rocketbase.utils.get_list_rocket_info_from_folder(FOLDER_PATH)
 
             # Get all the folders for the same Rocket (but different versions)
             list_rocket_info_local = [ri for ri in list_rocket_info_local if ri['username'] == rocket_info_user['username'] and ri['modelName'] == rocket_info_user['modelName']]

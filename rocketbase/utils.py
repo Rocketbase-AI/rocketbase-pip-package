@@ -125,3 +125,18 @@ def convert_slug_to_dict(rocket_slug: str, parsing_char: str = '/', version_type
         rocket_info[version_type] = rocket_label
 
     return rocket_info
+
+def get_list_rocket_info_from_folder(folder_path: str) -> list:
+    """Get the list of rocket_info from folders name inside of a folder.
+    
+    Args:
+        folder_path (str): Path to the folder containing the folders of the Rockets.
+
+    Returns:
+        list_rocket_info (list): List of rocket_info of all the folders of the Rockets in folder_path. 
+    """
+    list_folders = [f for f in os.listdir(folder_path) if not f.startswith('.') and f.count('_') >= 2]
+
+    list_rocket_info = [convert_slug_to_dict(f, '_', 'hash') for f in list_folders]
+
+    return list_rocket_info
