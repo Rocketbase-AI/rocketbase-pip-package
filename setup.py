@@ -18,7 +18,14 @@ setuptools.setup(
     install_requires=[
         'tqdm',
         'requests',
-        'google-cloud-storage'
+        'google-cloud-storage',
+        'numpy==1.16.3',
+        'opencv-python==4.1.0.25',
+        'Pillow==6.0.0',
+        'scikit-image==0.15.0',
+        'scipy==1.2.1',
+        'torch==1.0.1.post2',
+        'torchvision==0.2.2.post3'
     ],
     classifiers=[
         # Chose either "3 - Alpha", "4 - Beta" or "5 - Production/Stable"
