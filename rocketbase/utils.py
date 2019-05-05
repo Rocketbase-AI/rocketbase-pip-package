@@ -1,3 +1,4 @@
+import glob
 import os
 import tarfile
 
@@ -28,3 +29,31 @@ def unpack_tar_to_rocket(tar_path: str, rocket_folder_name: str, folder_path: st
         os.remove(tar_path)
 
     return rocket_folder_path
+
+def pack_rocket_to_tar(folder_path: str, rocket_folder: str, blueprint: list):
+    """Packs a Rocket into a tar archive
+    
+    Packs a Rocket's contents as described in the blueprint list of files into a tar archive
+
+    Args:
+        folder_path (str): path to folder containing the Rocket's folder and where the tar file will be created.
+        rocket_folder (str): name of the Rocket's folder.
+        blueprint (List[str]): list of all the file in the Rocket's folder that should be included in the tar file.
+
+    Returns:
+        tar_path (str): path the newly created tar file containing the Rocket.
+    """
+    # Path to the tar file
+    tar_path = os.path.join(folder_path, rocket_folder + '_launch.tar')
+    
+    # Glob to explore files in Rocket's folder
+    rocket_glob = glob.glob(os.path.join(folder_path, rocket_folder)+"/**/*", recursive=True)
+
+    # Create tar file
+    with tarfile.open(tar_path, "w") as tar_handle:
+        for filename in rocket_glob:
+            _filename = filename.replace(os.path.join(folder_path, rocket_folder), "").replace(str(os.sep), "", 1).replace(str(os.sep), "/")
+            if _filename in blueprint:
+                tar_handle.add(filename)
+
+    return tar_path
