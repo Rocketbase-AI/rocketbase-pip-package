@@ -1,62 +1,13 @@
 import importlib
-import json
 import os
 import requests
 import sys
-import types
 
-from datetime import datetime
 from tqdm import tqdm
 
 import rocketbase.api
 import rocketbase.utils
-from rocketbase.exceptions import *
-
-def read_slug(rocket: str):
-    """Parse the Rocket URL
-    """
-    rocket_parsed = rocket.split('/')
-    assert len(rocket_parsed) > 1, "Please provide more information about the rocket"
-    rocket_username = rocket_parsed[0].lower()
-    rocket_modelName   = rocket_parsed[1].lower()
-    rocket_hash= rocket_parsed[2] if len(rocket_parsed)>2 else ""
-    return rocket_username, rocket_modelName, rocket_hash
-
-def get_rocket_folder(rocket_slug: str):
-    """Build Rocket folder name
-    """
-    rocket_username, rocket_modelName, rocket_hash = read_slug(rocket_slug)
-    rocket_folder_name = rocket_username+'_'+rocket_modelName
-    if len(rocket_hash) > 7:
-        rocket_folder_name = rocket_folder_name+'_'+rocket_hash
-    print("Rocket folder is {}".format(rocket_folder_name))
-    return rocket_folder_name
-
-def check_metadata(data: dict):
-    """Verify the completness of the metadata provided in the info.json file
-    """
-    assert len(data['builder'])>1, "Please provide a builder name in info.json"
-    assert '_' not in data['builder'], "You can not use underscores in the builder name"
-    assert len(data['model'])>1, "Please provide a model name in info.json"
-    assert '_' not in data['model'], "You can not use underscores in the model name"
-    assert len(data['family'])>1, "Please provide the family name of the Rocket in info.json"
-    valid_families = [
-        "image_object_detection",
-        "image_human_pose_estimation",
-        "image_classification",
-        "image_superresolution",
-        "image_style_transfer",
-        "image_segmentation",
-        "image_instance_segmentation"
-        ]
-    assert data['family'] in valid_families, "Please enter a valid Rocket family in info.json. For a list of available families, please refer to the documentation."
-    assert len(data['dataset'])>1, "Please specify the dataset this Rocket was trained on in info.json"
-    assert len(data['rocketRepoUrl'])>1, "Please specify the URL of the Rocket code repository in info.json"
-    assert len(data['paperUrl'])>1, "Please specify the URL of the scientific publication in info.json"
-    assert len(data['originRepoUrl'])>1, "Please specify the URL of the origin code repository in info.json"
-    assert len(data['description'])>1, "Please add a description¨of your rocket in info.json"
-    assert len(data['blueprint'])>0, "Please add elements to the blueprint in info.json"
-    assert type(data['isTrainable']) is bool, "Please enter 'true' or 'false' for isTrainable in info.json"
+import rocketbase.exceptions
 
 class Rocket:
 
@@ -96,12 +47,12 @@ class Rocket:
         except requests.exceptions.RequestException as e:  # Catch all the Exceptions relative to the request
             print('Problem with the API:', e)
             rocket_info_api = {}
-        except rocketbase.api.RocketNotEnoughInfo as e:
+        except rocketbase.exceptions.RocketNotEnoughInfo as e:
             sys.exit(e)
-        except rocketbase.api.RocketAPIError as e:
+        except rocketbase.exceptions.RocketAPIError as e:
             print('API Error:', e)
             rocket_info_api = {}
-        except rocketbase.api.RocketNotFound as e: 
+        except rocketbase.exceptions.RocketNotFound as e: 
             print('No Rocket found with the API using the slug:', rocket_slug)
             rocket_info_api = {}
 
@@ -154,7 +105,7 @@ class Rocket:
             list_rocket_info_local = [ri for ri in list_rocket_info_local if ri['username'] == rocket_info_user['username'] and ri['modelName'] == rocket_info_user['modelName']]
 
             if not list_rocket_info_local:
-                raise RocketNotFound('No Rocket found locally using the slug: ' + rocket_slug)
+                raise rocketbase.exceptions.RocketNotFound('No Rocket found locally using the slug: ' + rocket_slug)
             else:
                 if 'label' in rocket_info_user.keys():
                     rocket_info_local = [ri for ri in list_rocket_info_local if ri['hash'] == rocket_info_user['label']]
@@ -163,10 +114,10 @@ class Rocket:
                         rocket_folder_name = rocketbase.utils.convert_dict_to_foldername(rocket_info_local[0])
                         print('Rocket found locally.')
                     else:
-                         raise RocketNotFound('No Rocket found locally using the slug: {}'.format(rocket_slug))
+                         raise rocketbase.exceptions.RocketNotFound('No Rocket found locally using the slug: {}'.format(rocket_slug))
                 
                 elif len(list_rocket_info_local) > 1:
-                    raise RocketNotEnoughInfo('There are multiple local versions of the Rocket \'' + rocket_slug + '\'. Please choose a specific version by providing the hash of the Rocket.')
+                    raise rocketbase.exceptions.RocketNotEnoughInfo('There are multiple local versions of the Rocket \'' + rocket_slug + '\'. Please choose a specific version by providing the hash of the Rocket.')
                 
                 else:
                     rocket_folder_name = rocketbase.utils.convert_dict_to_foldername(list_rocket_info_local[0])
@@ -196,47 +147,63 @@ class Rocket:
         FOLDER_PATH = 'rockets'
 
         # Get Rocket information
-        rocket_username, rocket_modelName, rocket_hash = read_slug(rocket_slug)
+        rocket_info_user = rocketbase.utils.convert_slug_to_dict(rocket_slug, version_type = 'hash')
 
-        # Get path to Rocket
-        rocket_path = get_rocket_folder(rocket_slug=rocket_slug)
+        if not 'hash' in rocket_info_user.keys():
+            raise rocketbase.exceptions.RocketNotEnoughInfo('Please include the hash of the version of the Rocket you want to launch.')
+
+        # Get name of the Rocket's folder
+        rocket_folder_name = rocketbase.utils.convert_dict_to_foldername(rocket_info_user)
 
         # Open info.json to verify information
-        with open(os.path.join(FOLDER_PATH, rocket_path, 'info.json')) as metadata_file:
-            metadata_dict = json.load(metadata_file)
-            check_metadata(metadata_dict)
-            assert str(metadata_dict['builder']) == str(rocket_username), "The Rocket author name does not match the information in info.json. {} vs {}".format(rocket_username, metadata_dict['builder'])
-            assert str(metadata_dict['model']) == str(rocket_modelName), "The Rocket model name does not match the information in info.json. {} vs {}".format(rocket_modelName, metadata_dict['model'])
+        rocket_folder_path = os.path.join(FOLDER_PATH, rocket_folder_name)
+        rocket_info_local = rocketbase.utils.import_rocket_info_from_rocket_folder(rocket_folder_path)
+
+        # Verify that the information extracted from the foler corresponds to the information provided by the user
+        if not rocket_info_user['username'] == rocket_info_local['username']:
+            raise rocketbase.exceptions.RocketInfoFormat('In the folder \'{}\',the username \'{}\' doesn\'t correspond to the username provided in the rocket_slug \'{}\'.'.format(rocket_folder_name, rocket_info_local['username'], rocket_info_user['username']))
+        
+        if not rocket_info_user['modelName'] == rocket_info_local['modelName']:
+            raise rocketbase.exceptions.RocketInfoFormat('In the folder \'{}\',the modelName \'{}\' doesn\'t correspond to the modelName provided in the rocket_slug \'{}\'.'.format(rocket_folder_name, rocket_info_local['modelName'], rocket_info_user['modelName']))
+
+        if not rocket_info_user['hash'] == rocket_info_local['hash']:
+            raise rocketbase.exceptions.RocketInfoFormat('In the folder \'{}\',the hash \'{}\' doesn\'t correspond to the hash provided in the rocket_slug \'{}\'.'.format(rocket_folder_name, rocket_info_local['hash'], rocket_info_user['hash']))
 
         print("Let's load everything into the Rocket...")
         
         # Pack folder into archive
-        path_to_launch_rocket = rocketbase.utils.pack_rocket_to_tar(folder_path, rocket_path, blueprint=metadata_dict['blueprint'])
+        path_to_rocket_ready_to_launch = rocketbase.utils.pack_rocket_to_tar(FOLDER_PATH, rocket_folder_name, blueprint=rocket_info['blueprint'])
         
         print("Let's get the new version name...")
         # Get new rocket hash
-        new_rocket_hash = rocketbase.utils.get_file_SHA1_hash(path_to_launch_rocket)
+        new_rocket_hash = rocketbase.utils.get_file_SHA1_hash(path_to_rocket_ready_to_launch)
         
         print("Rocket ready to launch!")
 
         # Init API for Rocket Upload
         api = rocketbase.api.RocketAPI()
         # Launch Rocket
-        launch_success = api.push_rocket(
-            rocket_username =rocket_username,
-            rocket_modelName =rocket_modelName,
-            rocket_hash =new_rocket_hash,
-            rocket_family = metadata_dict['family'],
-            trainingDataset = metadata_dict['dataset'],
-            isTrainable = metadata_dict['isTrainable'],
-            rocketRepoUrl = metadata_dict['rocketRepoUrl'], 
-            paperUrl = metadata_dict['paperUrl'],
-            originRepoUrl = metadata_dict['originRepoUrl'],
-            description = metadata_dict['description'],
-            tar_file=path_to_launch_rocket)
+        try:
+            launch_success = api.push_rocket(
+                rocket_username =rocket_info_local['username'],
+                rocket_modelName =rocket_info_local['modelName'],
+                rocket_hash =new_rocket_hash,
+                rocket_family = rocket_info_local['family'],
+                trainingDataset = rocket_info_local['trainingDataset'],
+                isTrainable = metadata_dict['isTrainable'],
+                rocketRepoUrl = metadata_dict['rocketRepoUrl'], 
+                paperUrl = metadata_dict['paperUrl'],
+                originRepoUrl = metadata_dict['originRepoUrl'],
+                description = metadata_dict['description'],
+                tar_file=path_to_rocket_ready_to_launch)
+            
+            print('Rocket reached its destination.')
 
-        print('Rocket reached its destination.' if launch_success else "There was a problem with the launch")
-        if launch_success:
-            os.remove(path_to_launch_rocket)
+        except requests.exceptions.RequestException as e:  # Catch all the Exceptions relative to the request
+            print('Problem with the request:', e)
+            launch_success = False
+        except rocketbase.exceptions.RocketAPIError as e:
+            print('API Error:', e)
+            launch_success = False
         
         return launch_success
