@@ -3,9 +3,7 @@ import io
 import os
 
 import imageio
-
 from PIL import Image
-from PIL import ImageDraw
 
 import requests
 
