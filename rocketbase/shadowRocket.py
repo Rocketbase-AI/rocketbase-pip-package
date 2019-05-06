@@ -128,7 +128,7 @@ class ShadowRocket:
             del ctx
             return img_out
 
-        elif not visualize and isinstance(api_results, Image):
+        elif not visualize and isinstance(api_results, Image.Image):
             raise rocketbase.exceptions.RocketInfoFormat(
                 'Impossible to get the raw output of the ShadowRocket as only the image visualization was returned by the API.'
             )
