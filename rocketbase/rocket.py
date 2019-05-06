@@ -61,6 +61,9 @@ class Rocket:
                 'The \'AUTO\' and \'GPU\' devices are not implemented yet. Please use only the \'CPU\' and \'API\' device.'
             )
 
+        # Strip the Rocket slug to avoid problem with leading and ending spaces
+        rocket_slug = rocket_slug.strip()
+
         # Parse the Rocket Slug
         rocket_info_user = rocketbase.utils.convert_slug_to_dict(rocket_slug)
 
