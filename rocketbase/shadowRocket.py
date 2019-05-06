@@ -1,4 +1,8 @@
+import base64
+import io
 import os
+
+import imageio
 
 from PIL import Image
 from PIL import ImageDraw
@@ -6,6 +10,7 @@ from PIL import ImageDraw
 import requests
 
 import rocketbase.exceptions
+
 
 class ShadowRocket:
     """ A ShadowRocket is a Rocket placeholder to use the Rocket's API
@@ -32,15 +37,16 @@ class ShadowRocket:
         ]
 
         # Check if all the needed information are provided
-        missing_info = set(LIST_REQUIRED_INFO) - rocket_info.keys()
+        missing_info = list(set(LIST_REQUIRED_INFO) - rocket_info.keys())
         empty_info = [k for k, i in rocket_info.items() if not isinstance(
             i, bool) and not i and k in LIST_REQUIRED_INFO]
-        
+
         if missing_info or empty_info:
             raise rocketbase.exceptions.RocketNotEnoughInfo(
-                'Missing the following information to create the ShadowRocket: {}.'.format(', '.join(set(missing_info + empty_info)))
+                'Missing the following information to create the ShadowRocket: {}.'.format(
+                    ', '.join(set(missing_info + empty_info)))
             )
-        
+
         # Keep the rocket_info
         self.rocket_info = rocket_info
 
@@ -51,13 +57,13 @@ class ShadowRocket:
             self: Indeed in certain cases, it is needed that the eval function returns the ShadowRocket itself.
         """
         return self
-    
+
     def preprocess(self, img: Image):
         """ Prepare the image to send it to the API 
 
         Args:
             img (PIL.Image): image to process with the API
-        
+
         Returns:
             PATH_TEMP_IMG (str): path to the temporary image saved to the disk
         """
@@ -68,18 +74,23 @@ class ShadowRocket:
         img.save(PATH_TEMP_IMG)
 
         return PATH_TEMP_IMG
-    
-    def __call__(self, img_path: str):
+
+    def __call__(self, img_path: str, api_visualize: bool = True):
         """ Use the API to simulate the pass-forward of the model
 
         Args:
             img_path (str): path to the image to process
+            api_visualize (bool): Boolean to ask the API to return the visualization
 
         Returns:
             The json answer from the API. 
         """
+        # Prepare the request
+        files = {'input': open(img_path, 'rb')}
+        values = {'visualize': 'true' if api_visualize else 'false'}
+
         # Do the pass-forward using the API
-        r = requests.post(self.rocket_info['apiUrl'], files=dict(input=open(img_path, 'rb')))
+        r = requests.post(self.rocket_info['apiUrl'], files=files, data=values)
 
         # Delete the temp image
         os.remove(img_path)
@@ -88,54 +99,44 @@ class ShadowRocket:
 
     def postprocess(self, api_results, input_img: Image, visualize: bool = False):
         """ Preprocess the answer from the API.
-        
+
         In most cases the answer of the API has already been postprocess. This function is to use the information to visualize the answer from the API.
 
         Args:
-            api_results (list[dict] or PIL.Image): either the formated output of the model or directly an image with the output visualization.
-            input_img (PIL.Image): initial image analized by the model
-            visualize (bool): if the function should returns the raw data or the visualization of the output.
+            api_results (list[dict]) / img_out (PIL.Image): Either the input directly or the visualization of the output.
+            input_img (PIL.Image): Input image process by the model. Is here to keep the compatibility with the standard Rockets.
+            visualize (bool): boolean to chose to either return the raw output or the visualization of it.
 
         Returns:
-            api_results (list[dict]) / img_out (PIL.Image): Either the input directly or the visualization of the output.
+            image (PIL.Image): if visualize == True, returns the visualization of the output of the model.
+            output (list): if visualize == False, returns the raw output of the model received from the API.
 
         Raises:
             RocketInfoFormat: If the format of the api_results doesn't match the desired postprocessing method. (e.g. if api_results is only an image but the user wants the list of the detections.)
         """
-        if visualize and isinstance(api_results, Image.Image):
-            return api_results
-        
-        elif not visualize and isinstance(api_results, list):
-            return api_results
+        if visualize:
+            # Check if the visualize info is in the API answer
+            if 'visualization' not in api_results.keys() or api_results['visualization'] == 'null':
+                raise rocketbase.exceptions.ShadowRocketPostprocessData(
+                    'Missing the visualization data from the API answer.'
+                )
 
-        elif visualize and isinstance(api_results, list):
-            line_width = 2
-            img_out = input_img
-            ctx = ImageDraw.Draw(img_out, 'RGBA')
-            for detection in api_results:
-                # Extract information from the detection
-                topLeft = (int(detection['topLeft_x']), int(detection['topLeft_y']))
-                bottomRight = (int(detection['topLeft_x']) + int(detection['width']) - line_width, int(detection['topLeft_y']) + int(detection['height'])- line_width)
-                # Sometimes some of those don't exists
-                class_name = detection['class_name']
-                bbox_confidence = int(detection['bbox_confidence'])
-                class_confidence = int(detection['class_confidence'])
+            # Get the b64 encoded String from the api result
+            b64_str = api_results['visualization']
 
-                # Draw the bounding boxes and the information related to it
-                ctx.rectangle([topLeft, bottomRight], outline=(255, 0, 0, 255), width=line_width)
-                ctx.text((topLeft[0] + 5, topLeft[1] + 10), text="{}, {:.2f}, {:.2f}".format(class_name, bbox_confidence, class_confidence))
+            # Convert the b64 string to an array containing the image
+            image_array = imageio.imread(io.BytesIO(base64.b64decode(b64_str)))
 
-            del ctx
-            return img_out
+            # Convert the array to the
+            image = Image.fromarray(image_array)
 
-        elif not visualize and isinstance(api_results, Image.Image):
-            raise rocketbase.exceptions.RocketInfoFormat(
-                'Impossible to get the raw output of the ShadowRocket as only the image visualization was returned by the API.'
-            )
-        
+            return image
+
         else:
-            raise rocketbase.exceptions.RocketInfoFormat(
-                'Format of the API answer is not recognized: \'{}\'.'.format(type(api_results))
-            )
+            # Check if the visualize info is in the API answer
+            if 'output' not in api_results.keys() or not api_results['output']:
+                raise rocketbase.exceptions.ShadowRocketPostprocessData(
+                    'Missing list of the outputs of the model from the API answer.'
+                )
 
-    
+            return api_results['output']
