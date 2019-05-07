@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name='rocketbase',
     packages=setuptools.find_packages(),
-    version='0.3.2',
+    version='0.4.0',
     license='Proprietary',
     description='Making Machine Learning available to everyone',
     long_description=long_description,
@@ -14,7 +14,7 @@ setuptools.setup(
     author='Mirage Technologies AG',
     author_email='hello@mirage.id',
     url='https://rocketbase.ai',
-    keywords=['automatic', 'ML', 'deployment', 'pytorch', 'pretrained'],
+    keywords=['automatic', 'ML', 'deployment', 'pytorch', 'pretrained', 'API'],
     install_requires=[
         'tqdm',
         'requests',
