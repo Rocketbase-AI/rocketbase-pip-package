@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name='rocketbase',
     packages=setuptools.find_packages(),
-    version='0.4.0',
+    version='0.4.1',
     license='Proprietary',
     description='Making Machine Learning available to everyone',
     long_description=long_description,
