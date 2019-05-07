@@ -1,6 +1,5 @@
 import base64
 import io
-import os
 
 import imageio
 from PIL import Image
