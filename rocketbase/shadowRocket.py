@@ -57,41 +57,41 @@ class ShadowRocket:
         return self
 
     def preprocess(self, img: Image):
-        """ Prepare the image to send it to the API 
+        """ Placeholder to keep the same functionalities as with the normal Rocket.
+
+        No preprocessing is done on device when using the ShadowRocket. 
 
         Args:
-            img (PIL.Image): image to process with the API
+            img (PIL.Image): image to process with the API.
 
         Returns:
-            PATH_TEMP_IMG (str): path to the temporary image saved to the disk
+            img (PIL.Image): return the input image unmodified.
         """
-        # Path to the temporary image
-        PATH_TEMP_IMG = '.temp.png'
+        return img
 
-        # save the image to the disk
-        img.save(PATH_TEMP_IMG)
 
-        return PATH_TEMP_IMG
-
-    def __call__(self, img_path: str, api_visualize: bool = True):
+    def __call__(self, img: Image, api_visualize: bool = True):
         """ Use the API to simulate the pass-forward of the model
 
         Args:
-            img_path (str): path to the image to process
-            api_visualize (bool): Boolean to ask the API to return the visualization
+            img (PIL.Image): image to process with the API.
+            api_visualize (bool): Boolean to ask the API to return the visualization.
 
         Returns:
             The json answer from the API. 
         """
-        # Prepare the request
-        files = {'input': open(img_path, 'rb')}
-        values = {'visualize': 'true' if api_visualize else 'false'}
+        
+        # Convert the PIL.Image to a stream of Bytes to be able to send it without saving it to the disk.
+        with io.BytesIO() as buffer:
+            img.save(buffer, "PNG")
+            buffer.seek(0)
 
-        # Do the pass-forward using the API
-        r = requests.post(self.rocket_info['apiUrl'], files=files, data=values)
+            # Prepare the request
+            files = {'input': buffer}
+            values = {'visualize': 'true' if api_visualize else 'false'}
 
-        # Delete the temp image
-        os.remove(img_path)
+            # Do the pass-forward using the API
+            r = requests.post(self.rocket_info['apiUrl'], files=files, data=values)
 
         return r.json()
 
