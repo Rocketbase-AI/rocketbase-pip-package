@@ -15,6 +15,10 @@ class ShadowRocket:
 
     In order to use seemlessly the Deep Learning models on the machine and the Cloud API we use a ShadowRocket instead of the usual Rocket. The ShadowRocket has the same functions as the normal Rocket but they work differently to allow the use of the API instead of on-device deep learning model.
 
+    In order to force the use of a ShadowRocket, add the device = 'API' flag when landing the Rocket:
+
+        model = Rocket.land(rocket, device='API').eval()
+
     Attributes:
         rocket_info (dict): It contains all of the information relative to Rocket including the apiUrl and the family of the Rocket.
     """
