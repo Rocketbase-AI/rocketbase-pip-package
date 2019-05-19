@@ -3,6 +3,7 @@ import os
 import sys
 
 import requests
+import torch
 import tqdm
 
 import rocketbase.api
@@ -15,7 +16,7 @@ import rocketbase.utils
 class Rocket:
 
     @staticmethod
-    def land(rocket_slug: str, device: str = 'CPU', display_loading: bool = True):
+    def land(rocket_slug: str, device: str = 'GPU', force_local: bool = False, display_loading: bool = True):
         """ Download or check that the Rocket is ready locally
 
         Download the Rocket if it is not yet locally here.
@@ -28,10 +29,10 @@ class Rocket:
         Args:
             rocket_slug (str): Rocket identifier (username/modelName/(hash or label))
             device (str): device the rocket should use to run. There are 4 possibilites:
-                1. AUTO: The Rocket will chose itself the best device.
-                2. CPU [Default]: The Rocket will run only on CPU.
-                3. GPU: The Rocket will run on the first available GPU.
-                4. API: An API will be used instead of a local Rocket.
+                1. CPU: The Rocket will run only on CPU.
+                2. GPU [Default]: The Rocket will run on the first available GPU.
+                3. API: An API will be used instead of a local Rocket.
+            force_local (bool): Default is False. Don't check the API when landing a rocket.
             display_loading (boolean): Display the loading bar. Can be useful to remove it when using it on a server with logs.
 
         Returns:
@@ -48,18 +49,32 @@ class Rocket:
         # Define the folder path for the Rocket
         FOLDER_PATH = 'rockets'
 
+        # --- DEVICE ---
+        # convert the device to a readable form
+        device = device.lower().split(':')
+
         # Check if the device exists
-        LIST_DEVICES = ['AUTO', 'CPU', 'GPU', 'API']
-        if device not in LIST_DEVICES:
+        LIST_DEVICES = ['cpu', 'gpu', 'api']
+        if device[0] not in LIST_DEVICES:
             raise rocketbase.exceptions.RocketDeviceNotFound(
                 'The device \'{}\' was not found among the valid devices to use with a Rocket.'
             )
 
-        # Warn the users that the AUTO and GPU devices are not ready yet
-        if device in ['AUTO', 'GPU']:
-            raise NotImplementedError(
-                'The \'AUTO\' and \'GPU\' devices are not implemented yet. Please use only the \'CPU\' and \'API\' device.'
-            )
+        # convert device to readable string by pytorch
+        if device[0] == 'gpu' and torch.cuda.is_available():
+            torch_device = torch.device('cuda:'+ str(device[1]) if len(device) > 1 else 'cuda')
+        elif device[0] == 'api':
+            torch_device = None
+        else:
+            torch_device = torch.device('cpu')
+        
+        # Inform the use if yes or no a GPU is detected
+        if torch.cuda.is_available():
+            print('GPU detected on the machine.')
+        else:
+            print('No GPU detected on the machine.')
+
+        print('The selected device to execute the model is {}'.format(torch_device))
 
         # Strip the Rocket slug to avoid problem with leading and ending spaces
         rocket_slug = rocket_slug.strip()
@@ -67,26 +82,29 @@ class Rocket:
         # Parse the Rocket Slug
         rocket_info_user = rocketbase.utils.convert_slug_to_dict(rocket_slug)
 
-        # Create the API object
-        api = rocketbase.api.RocketAPI()
+        if not force_local:
+            # Create the API object
+            api = rocketbase.api.RocketAPI()
 
-        # Check if the rocket exists and get the last version if not precised
-        try:
-            # Only keep the first model
-            rocket_info_api = api.get_rocket_info(rocket_info_user)[0]
-        except requests.exceptions.RequestException as e:
-            print('Problem with the API:', e)
-            rocket_info_api = {}
-        except rocketbase.exceptions.RocketNotEnoughInfo as e:
-            sys.exit(e)
-        except rocketbase.exceptions.RocketAPIError as e:
-            print('API Error:', e)
-            rocket_info_api = {}
-        except rocketbase.exceptions.RocketNotFound as e:
-            print('No Rocket found with the API using the slug:', rocket_slug)
+            # Check if the rocket exists and get the last version if not precised
+            try:
+                # Only keep the first model
+                rocket_info_api = api.get_rocket_info(rocket_info_user)[0]
+            except requests.exceptions.RequestException as e:
+                print('Problem with the API:', e)
+                rocket_info_api = {}
+            except rocketbase.exceptions.RocketNotEnoughInfo as e:
+                sys.exit(e)
+            except rocketbase.exceptions.RocketAPIError as e:
+                print('API Error:', e)
+                rocket_info_api = {}
+            except rocketbase.exceptions.RocketNotFound as e:
+                print('No Rocket found with the API using the slug:', rocket_slug)
+                rocket_info_api = {}
+        else:
             rocket_info_api = {}
 
-        if device in ['CPU']:
+        if device[0] in ['cpu', 'gpu']:
             # Check if folder to download the rockets exists
             if not os.path.exists(FOLDER_PATH):
                 os.makedirs(FOLDER_PATH)
@@ -171,16 +189,21 @@ class Rocket:
                 else:
                     rocket_folder_name = rocketbase.utils.convert_dict_to_foldername(
                         list_rocket_info_local[0])
-                    print('Rocket found locally.')
+                    print('Rocket found locally. Using the local version:{}'.format(
+                        rocket_folder_name))
 
-            print("Let's prepare the Rocket...")
+            
             # Build the model
             module = importlib.import_module(
                 'rockets.{}.rocket_builder'.format(rocket_folder_name))
             build_func = getattr(module, 'build')
             model = build_func()
 
-        elif device in ['API']:
+            model.to(torch_device)
+
+            print("Rocket successfully built.")
+
+        elif device[0] in ['api']:
             if 'apiUrl' not in rocket_info_api.keys():
                 raise rocketbase.exceptions.RocketNotEnoughInfo(
                     'No \'apiUrl\' found for the Rocket \'{}\''.format(rocket_slug)
@@ -188,7 +211,7 @@ class Rocket:
             print('Using the Shadow Rocket of the Rocket \'{}\''.format(rocket_slug))
 
             model = rocketbase.shadowRocket.ShadowRocket(rocket_info_api)
-    
+
         return model
 
     @staticmethod
