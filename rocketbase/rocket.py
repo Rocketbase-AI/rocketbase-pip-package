@@ -227,10 +227,16 @@ class Rocket:
             rocket_folder_path)
 
         print("Let's load everything into the Rocket...")
+        rocket_name_in_tar = rocketbase.utils.convert_dict_to_foldername(
+                rocket_info_user,
+                include_hash= False
+            )
 
         # Pack folder into archive
         path_to_rocket_ready_to_launch = rocketbase.utils.pack_rocket_to_tar(
-            FOLDER_PATH, rocket_folder_name, blueprint=rocket_info_local['blueprint'])
+            rocket_path = rocket_folder_path,
+            rocket_folder_name = rocket_name_in_tar,
+            blueprint=rocket_info_local['blueprint'])
 
         print("Let's get the new version name...")
         # Get new rocket hash
