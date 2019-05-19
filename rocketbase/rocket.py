@@ -192,13 +192,14 @@ class Rocket:
         return model
 
     @staticmethod
-    def launch(rocket_slug: str):
+    def launch(rocket_folder_path: str, remove_launched_tar: bool = True):
         """ Upload the latest Rocket that is ready locally
 
         Upload the latest version of the Rocket that is locally available
 
         Args:
-            rocket_slug (str): Rocket slug (<username>/<modelName>/<hash>). The <hash> is not optional.
+            rocket_folder_path (str): Path to the folder containing the info.json file of the Rocket.
+            remove_launched_tar (bool): Default True. Remove the .tar file once it has been uploaded.
 
         Returns:
             launched_rocket_slug (str): slug of the successfully uploaded Rocket. If the upload failed then it returns an empty string.
@@ -206,29 +207,15 @@ class Rocket:
         Raises:
             RocketNotEnoughInfo: If the <hash> of the Rocket to upload is not given in the rocket_slug
         """
-        # Define the folder path for the Rocket
-        FOLDER_PATH = 'rockets'
-
-        # Get Rocket information
-        rocket_info_user = rocketbase.utils.convert_slug_to_dict(
-            rocket_slug, version_type='hash')
-
-        if 'hash' not in rocket_info_user.keys():
-            raise rocketbase.exceptions.RocketNotEnoughInfo(
-                'Please include the hash of the version of the Rocket you want to launch.')
-
-        # Get name of the Rocket's folder
-        rocket_folder_name = rocketbase.utils.convert_dict_to_foldername(
-            rocket_info_user)
 
         # Open info.json to verify information
-        rocket_folder_path = os.path.join(FOLDER_PATH, rocket_folder_name)
         rocket_info_local = rocketbase.utils.import_rocket_info_from_rocket_folder(
             rocket_folder_path)
 
         print("Let's load everything into the Rocket...")
+
         rocket_name_in_tar = rocketbase.utils.convert_dict_to_foldername(
-                rocket_info_user,
+                rocket_info_local,
                 include_hash= False
             )
 
@@ -239,6 +226,7 @@ class Rocket:
             blueprint=rocket_info_local['blueprint'])
 
         print("Let's get the new version name...")
+
         # Get new rocket hash
         new_rocket_hash = rocketbase.utils.get_file_sha1_hash(
             path_to_rocket_ready_to_launch)
@@ -266,5 +254,9 @@ class Rocket:
         except rocketbase.exceptions.RocketNotEnoughInfo as e:
             print('Not enough Information to upload the Rocket', e)
             launched_rocket_slug = ''
+
+        # Remove the tar file
+        if remove_launched_tar:
+            os.remove(path_to_rocket_ready_to_launch)
 
         return launched_rocket_slug
