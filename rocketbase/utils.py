@@ -1,4 +1,3 @@
-import glob
 import json
 import hashlib
 import os
@@ -62,33 +61,32 @@ def unpack_tar_to_rocket(tar_path: str, rocket_folder_name: str, folder_path: st
     return rocket_folder_path
 
 
-def pack_rocket_to_tar(folder_path: str, rocket_folder: str, blueprint: list):
+def pack_rocket_to_tar(rocket_path: str, rocket_folder_name: str, blueprint: list):
     """Packs a Rocket into a tar archive
 
     Packs a Rocket's contents as described in the blueprint list of files into a tar archive
 
     Args:
-        folder_path (str): path to folder containing the Rocket's folder and where the tar file will be created.
-        rocket_folder (str): name of the Rocket's folder.
+        rocket_path (str): path to the Rocket folder containing all the files which need to be added in the Rocket.
+        rocket_folder_name (str): slug of the Rocket without the hash and with underscore (e.g. username_modelName).
         blueprint (List[str]): list of all the file in the Rocket's folder that should be included in the tar file.
+
+    Notes:
+        If the filename in the blueprint is a folder, all the files in this folder will be added to the tar file. 
 
     Returns:
         tar_path (str): path the newly created tar file containing the Rocket.
     """
     # Path to the tar file
-    tar_path = os.path.join(folder_path, rocket_folder + '_launch.tar')
+    tar_path = rocket_path + '_ready_for_launch.tar'
 
-    # Glob to explore files in Rocket's folder
-    rocket_glob = glob.glob(os.path.join(
-        folder_path, rocket_folder)+"/**/*", recursive=True)
-
-    # Create tar file
     with tarfile.open(tar_path, "w") as tar_handle:
-        for filename in rocket_glob:
-            _filename = filename.replace(os.path.join(folder_path, rocket_folder), "").replace(
-                str(os.sep), "", 1).replace(str(os.sep), "/")
-            if _filename in blueprint:
-                tar_handle.add(filename)
+        for filename in blueprint: # Only add the files in the blueprint
+            # Add the file and rename it to not put the full path in the tar file
+            tar_handle.add(
+                name = os.path.join(rocket_path, filename),
+                arcname= os.path.join(rocket_folder_name, filename),
+            )
 
     return tar_path
 
@@ -182,12 +180,13 @@ def get_list_rocket_info_from_folder(folder_path: str) -> list:
     return list_rocket_info
 
 
-def convert_dict_to_foldername(rocket_info: dict, separation_char: str = '_') -> str:
+def convert_dict_to_foldername(rocket_info: dict, separation_char: str = '_', include_hash = True) -> str:
     """Convert a dict containing the information about a Rocket to a folder name.
 
     Args:
         rocket_info (dict):  Dictionary containing the information about a Rocket.
         separation_char (str): Character used to separate the information in the name of the folder.
+        include_hash (bool): Defautl True. Boolean to include the hash of the Rocket in the folder name.
 
     Returns:
         rocket_folder_name (str): Name of the folder containing the Rocket.
@@ -195,14 +194,28 @@ def convert_dict_to_foldername(rocket_info: dict, separation_char: str = '_') ->
     Raises:
         RocketNotEnoughInfo: If there are not enough information to create the folder name
     """
-    missing_info = set(['username', 'modelName', 'hash']) - rocket_info.keys()
+    # List of the information required to create the folder name
+    list_required_info = [
+        'username',
+        'modelName'
+    ]
+
+    # If the hash needs to be included, add the hash to the required information
+    if include_hash:
+        list_required_info.append('hash')
+
+    missing_info = set(list_required_info) - rocket_info.keys()
 
     if missing_info:
         raise rocketbase.exceptions.RocketNotEnoughInfo(
             'Missing the following information to create the Rocket\'s folder name: ' + ', '.join(missing_info))
+    
+    info_to_use = [rocket_info['username'], rocket_info['modelName']]
 
-    rocket_folder_name = rocket_info['username'] + str(separation_char) + \
-        rocket_info['modelName'] + str(separation_char) + rocket_info['hash']
+    if include_hash:
+        info_to_use.append(rocket_info['hash'])
+
+    rocket_folder_name = str(separation_char).join(info_to_use)
 
     return rocket_folder_name
 
