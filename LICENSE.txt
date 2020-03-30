@@ -1,5 +1,0 @@
-Proprietary Licence
-
-Copyright (c) 2019 Mirage Technologies AG
-
-Unauthorized copying of this file, via any medium is strictly prohibited.
