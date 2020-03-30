@@ -18,4 +18,9 @@ If you just want to try the currently available version then simply use the foll
 pip install rocketbase
 ```
 
+## Build, compress and upload the package to PyPi
+
+```
+rm -rf build dist rocketbase.egg-info && python3 setup.py sdist bdist_wheel && python3 -m twine upload dist/*
+```
 
